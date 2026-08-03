@@ -55,3 +55,52 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio and IDE state
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.userprefs
+*.sln.docstates
+*.njsproj
+*.ntvs*
+*.code-workspace
+.vscode/*.local.*
+
+# JavaScript tooling and generated frontend output
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Test and coverage reports
+TestResults/
+test-results/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Local configuration and secrets
+.env.*
+!.env.example
+*.local
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary and generated archives
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
