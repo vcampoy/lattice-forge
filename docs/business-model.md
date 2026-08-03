@@ -36,6 +36,10 @@ Today, the implemented value is narrower:
 - early warnings for minimum wall thickness; and
 - an API boundary that can support a future visual workflow.
 
+### Phase 02 experience signal
+
+The workspace shell now makes the intended product narrative visible in one screen: geometry controls on the left, an engineering viewport in the centre, and manufacturing outcomes on the right. Empty metrics intentionally read as “Awaiting analysis” with em dashes, so the interface communicates the future workflow without presenting fabricated results. This is an experience and comprehension improvement only; it does not change the business model, target users, or pricing assumptions.
+
 ## Primary workflow
 
 The intended workflow is:
@@ -47,7 +51,7 @@ The intended workflow is:
 5. Review warnings and the illustrative-estimate disclaimer.
 6. Save or export the concept for further work.
 
-**Implemented today:** API health, material discovery, and analysis calculation. Steps 1 and 4–6, plus UI integration for steps 2–3, are planned.
+**Implemented today:** API health, material discovery, analysis calculation, and the phase 02 workspace shell. Steps 1 and 4–6, plus UI integration for steps 2–3, remain planned; phase 02 controls are presentational until the Three.js scene and analysis integration are added.
 
 ## Business assumptions
 

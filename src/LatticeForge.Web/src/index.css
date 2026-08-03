@@ -6,17 +6,22 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   --bg: #080b0f;
-  --panel: #10151b;
+  --panel: rgba(15, 21, 27, 0.94);
+  --panel-raised: #131b22;
   --line: rgba(188, 205, 216, 0.14);
+  --line-strong: rgba(188, 205, 216, 0.23);
   --muted: #84909c;
+  --muted-bright: #a4b0bb;
   --cyan: #57d5dc;
   --cyan-soft: rgba(87, 213, 220, 0.16);
   --amber: #f2ac63;
+  --red: #e77769;
 }
 
 * { box-sizing: border-box; }
-
+html { min-width: 320px; background: var(--bg); }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
-button, input { font: inherit; }
-
+button, input, select { font: inherit; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 #root { min-height: 100vh; }

@@ -20,7 +20,7 @@ The development client runs on `http://localhost:5173` and proxies `/api` reques
 
 | Component | Responsibility | Current technology |
 |---|---|---|
-| Web client | Render the foundation experience and report API availability | React 19, TypeScript, Vite 8, CSS |
+| Web client | Render the responsive manufacturing workspace shell and report API availability | React 19, TypeScript, Vite 8, CSS, Lucide React, Zustand |
 | Minimal API | Expose health, material, and analysis contracts | ASP.NET Core on .NET 10 |
 | Material catalogue | Supply one deterministic example material per manufacturing process | In-memory static catalogue |
 | Analysis service | Validate requests and calculate illustrative metrics | Stateless C# domain service |
@@ -184,7 +184,15 @@ npm install
 npm run build
 ```
 
-Frontend component tests are not installed yet; they enter scope in phase 02.
+Frontend component tests are implemented in phase 02. They run in jsdom through Vitest and Testing Library, and currently protect major workspace regions, accessible names, and explicit empty analysis states.
+
+## Frontend workspace shell (phase 02)
+
+The client now presents a responsive industrial workspace without a Three.js scene or live analysis controls. `App.tsx` keeps the page regions explicit: header and API status, design controls, viewport placeholder, manufacturing analysis, and viewport toolbar. The UI state boundary is `useWorkspaceStore.ts`; it owns only view mode and grid visibility until geometry state is introduced in a later phase.
+
+The shell uses semantic headings, labelled controls, live API status, visible focus rings, and responsive layouts down to 560px. Lucide icons are inline SVG components, so this phase has no external runtime assets. The viewport atmosphere and technical grid are CSS-only placeholders and are deliberately not a substitute for the planned Three.js scene.
+
+Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. They run in jsdom through Vitest and Testing Library. `npm test`, `npm run build`, and `npm run lint` are the current frontend checks.
 
 ## Current constraints
 
@@ -193,6 +201,7 @@ Frontend component tests are not installed yet; they enter scope in phase 02.
 - Validation exceptions are translated at the HTTP boundary; there is no richer domain error model yet.
 - Authentication, authorization, observability, rate limiting, and production deployment are outside the demo's current scope.
 - The web client calls only the health endpoint today. Material and analysis endpoints are not yet connected to the UI.
+- Design controls are presentational in phase 02; they do not yet drive analysis or geometry.
 
 ## Planned, not implemented
 
@@ -204,5 +213,5 @@ The following capabilities appear in the build plan but **do not exist in the cu
 - live manufacturing-analysis integration in the UI;
 - optimization animation;
 - SQLite persistence and STL export;
-- frontend unit/component tests; and
+- broader frontend interaction and end-to-end coverage; and
 - production deployment or engineering-grade manufacturing validation.
