@@ -105,3 +105,9 @@ Lattice Forge is an independent demonstration project. It is not affiliated with
 The product concept supports early exploration and communication. It does not replace CAD, topology optimization, finite-element analysis, build preparation, slicing, machine qualification, regulatory review, or an additive-manufacturing engineer.
 
 No pricing model, commercial packaging, production tenancy, or revenue forecast is defined. Those decisions would be premature without validated users, workflows, and model fidelity.
+
+## Phase 06 — Live analysis experience
+
+The right panel now consumes the real ASP.NET Core analysis contract as users adjust geometry, material, or process. Debouncing protects the API during slider movement; cancellation ensures the visible result always belongs to the current design. Success, validation, unavailable, and retry states make the workflow trustworthy instead of hiding failures.
+
+This strengthens the product hypothesis that a single visual workspace can connect a design choice to understandable manufacturing tradeoffs. The API values remain explicitly illustrative and are not positioned as quotes, certification, or Materialise functionality. The compact Solid-versus-Optimized comparison and suggested corrections improve the conversation with a designer, while persistence, export, and production validation remain outside the current scope.

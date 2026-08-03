@@ -208,3 +208,37 @@ Phase 05 makes the lightweighting story visible in one gesture and supports a be
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+## Phase 06 — Live manufacturing analysis integration
+
+**Status:** Implemented
+
+### Delivered
+
+- Added a typed `POST /api/analyses` client with explicit request/response/error contracts.
+- Added a 320 ms debounce, per-request `AbortController`, sequence guard, and retry action so stale slider requests cannot overwrite current results.
+- Added explicit idle, loading, success, validation, unavailable, and generic error states without affecting the Three.js viewport.
+- Replaced placeholder metrics with API-authoritative score, optimized weight, illustrative cost/time, material reduction, support risk, warnings, suggested corrections, and Solid-versus-Optimized volume/weight comparison.
+- Kept the illustrative-estimate disclosure persistent and added reduced-motion-safe CSS numeric transitions.
+- Normalized the UI's 0–100% lattice-density control to the API's 0–1 request contract; frontend equations remain absent.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| `npm test` in `src/LatticeForge.Web` | Passed — 7 files, 24 tests |
+| `npm run build` in `src/LatticeForge.Web` | Passed (Vite emitted a non-blocking large-chunk advisory) |
+| `npm run lint` in `src/LatticeForge.Web` | Passed |
+| `dotnet test LatticeForge.sln --no-restore` | Passed — 12 tests |
+
+### Decisions and tradeoffs
+
+- Kept API orchestration in a hook and rendering in a panel so SOLID boundaries remain clear and the viewport is resilient to API failure.
+- Used native `fetch`, `AbortController`, and CSS transitions instead of adding a query or animation library for this interview-scale workflow.
+- Kept API validation visible with retry guidance; no fabricated fallback analysis is shown.
+
+### Documentation changed
+
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`

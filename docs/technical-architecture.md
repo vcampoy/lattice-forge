@@ -209,7 +209,7 @@ Geometry and material instances are memoized by geometry parameters and disposed
 
 `DesignControls.tsx` renders paired range and numeric inputs with explicit units, bounded steps, keyboard-operable native controls, and accessible labels/current values. Materials are loaded from `GET /api/materials`; the material select is filtered to the selected process and changing process chooses its compatible catalogue entry. If the API is unavailable, a small deterministic demo catalogue keeps the shell usable without pretending that analysis succeeded.
 
-`ThreeViewport` passes the current normalized dimensions through `BracketScene` to `BracketGeometry`, so all five geometric dimensions update the visible bracket while dragging. The viewport dimensions label is derived from the same state. API analysis requests, lattice rendering, persistence, and export remain intentionally out of scope.
+`ThreeViewport` passes the current normalized dimensions through `BracketScene` to `BracketGeometry`, so all five geometric dimensions update the visible bracket while dragging. The viewport dimensions label is derived from the same state. Persistence and export remain intentionally out of scope.
 
 ## Lattice reveal and comparison (phase 05)
 
@@ -235,3 +235,13 @@ The following capabilities appear in the build plan but **do not exist in the cu
 - SQLite persistence and STL export;
 - broader frontend interaction and end-to-end coverage; and
 - production deployment or engineering-grade manufacturing validation.
+
+## Manufacturing-analysis integration (phase 06)
+
+`manufacturingApi.ts` owns the typed browser contract for `POST /api/analyses`; it serializes the normalized lattice density expected by the API and raises typed errors for HTTP failures. `useManufacturingAnalysis.ts` owns presentation-side orchestration: a 320 ms debounce, an `AbortController` per request, sequence checks, and explicit `idle`, `loading`, `success`, `validation`, `unavailable`, and `error` states. Cleanup aborts timers and in-flight work so rapid slider changes cannot let stale results overwrite the newest design.
+
+`ManufacturingAnalysisPanel.tsx` formats API-authoritative values only. It renders score, optimized weight, illustrative cost/time, material reduction, support risk, warnings, suggested corrections, and a compact Solid-versus-Optimized volume/weight comparison. The disclosure “Illustrative estimate — not engineering validation” remains visible in every state. Numeric values use a CSS transition and disable motion under `prefers-reduced-motion`; no animation library or duplicate manufacturing equation is present in the client.
+
+Frontend tests cover debounce and cancellation, success, validation failure, unavailable/retry, and panel rendering. The 3D viewport remains independent: API failures update only the analysis panel and never unmount or replace the Three.js scene.
+
+Phase 06 supersedes the earlier planned note that analysis was not connected: design controls now drive both local geometry and debounced API analysis, while the API remains authoritative for all manufacturing equations. Optimization animation, persistence, export, and engineering-grade validation remain planned.
