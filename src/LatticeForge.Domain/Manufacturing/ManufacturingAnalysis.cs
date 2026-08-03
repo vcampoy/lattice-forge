@@ -1,4 +1,4 @@
-namespace LatticeForge.Api.Manufacturing;
+namespace LatticeForge.Domain.Manufacturing;
 
 public sealed record ManufacturingAnalysis(
     double SolidVolume,

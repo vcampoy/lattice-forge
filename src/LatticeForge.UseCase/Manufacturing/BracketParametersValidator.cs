@@ -1,4 +1,6 @@
-namespace LatticeForge.Api.Manufacturing;
+using LatticeForge.Domain.Manufacturing;
+
+namespace LatticeForge.UseCase.Manufacturing;
 
 public static class BracketParametersValidator
 {

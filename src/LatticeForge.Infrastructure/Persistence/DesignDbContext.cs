@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace LatticeForge.Api.Persistence;
+namespace LatticeForge.Infrastructure.Persistence;
 
 public sealed class DesignDbContext(DbContextOptions<DesignDbContext> options) : DbContext(options)
 {

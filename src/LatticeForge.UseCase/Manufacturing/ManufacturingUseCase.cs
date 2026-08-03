@@ -1,10 +1,21 @@
-namespace LatticeForge.Api.Manufacturing;
+using LatticeForge.Domain.Manufacturing;
 
-public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> materials)
+namespace LatticeForge.UseCase.Manufacturing;
+
+public sealed class ManufacturingUseCase : IManufacturingUseCase
 {
     private const double MillimetresPerCubicCentimetre = 1000;
-    private readonly Dictionary<string, MaterialProfile> _materials = materials
+    private static readonly MaterialProfile[] Catalogue =
+    [
+        new("aluminum-sls", "Aluminium PA", ManufacturingProcess.Sls, 1.04, 68, 1.2, 7.5),
+        new("resin-sla", "Clear Resin", ManufacturingProcess.Sla, 1.1, 92, 0.8, 2.2),
+        new("titanium-lpbf", "Titanium Ti-6Al-4V", ManufacturingProcess.MetalLpbf, 4.43, 185, 0.6, 1.1)
+    ];
+    private static readonly IReadOnlyList<MaterialProfile> ReadOnlyCatalogue = Array.AsReadOnly(Catalogue);
+    private readonly Dictionary<string, MaterialProfile> _materials = Catalogue
         .ToDictionary(material => material.Id, StringComparer.OrdinalIgnoreCase);
+
+    public IReadOnlyList<MaterialProfile> Materials => ReadOnlyCatalogue;
 
     public ManufacturingAnalysis Analyze(
         BracketParameters parameters,
@@ -12,17 +23,15 @@ public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> 
         ManufacturingProcess process)
     {
         ArgumentNullException.ThrowIfNull(parameters);
-
         Validate(parameters, materialId, process);
 
         MaterialProfile material = _materials[materialId];
-
         double wallFactor = 0.22 + Math.Clamp(parameters.WallThickness / 20, 0, 1) * 0.08;
         double envelopeVolumeCubicMillimetres = parameters.Length * parameters.Height * parameters.Depth * wallFactor;
         double holeVolumeCubicMillimetres = Math.PI * Math.Pow(parameters.HoleRadius, 2) * parameters.Depth * 2 * 0.9;
-        double solidVolume = Math.Max(0.001, (envelopeVolumeCubicMillimetres - holeVolumeCubicMillimetres) / MillimetresPerCubicCentimetre);
-
-        // Simplified illustrative lattice equation: density 0..1 maps to 30..75% of the solid volume.
+        double solidVolume = Math.Max(
+            0.001,
+            (envelopeVolumeCubicMillimetres - holeVolumeCubicMillimetres) / MillimetresPerCubicCentimetre);
         double optimizedVolume = solidVolume * (0.30 + parameters.LatticeDensity * 0.45);
         double estimatedWeight = optimizedVolume * material.Density;
         double estimatedCost = estimatedWeight / 1000 * material.CostPerKg;
@@ -59,7 +68,10 @@ public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> 
             true);
     }
 
-    public void Validate(BracketParameters parameters, string materialId, ManufacturingProcess process)
+    public void Validate(
+        BracketParameters parameters,
+        string materialId,
+        ManufacturingProcess process)
     {
         BracketParametersValidator.Validate(parameters);
 

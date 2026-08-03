@@ -1,14 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
 
-namespace LatticeForge.Api.Tests;
+namespace LatticeForge.Api.Tests.LatticeForge.Api.Endpoints;
 
-public sealed class HealthEndpointTests : IClassFixture<IsolatedWebApplicationFactory>
+public sealed class HealthEndpointsTests : IClassFixture<IsolatedWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public HealthEndpointTests(IsolatedWebApplicationFactory factory)
+    public HealthEndpointsTests(IsolatedWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
@@ -21,9 +21,7 @@ public sealed class HealthEndpointTests : IClassFixture<IsolatedWebApplicationFa
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         HealthResponse? payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
-        Assert.Equal("ok", payload!.Status);
+        Assert.Equal("ok", payload.Status);
         Assert.Equal("Lattice Forge API", payload.Service);
     }
-
-    private sealed record HealthResponse(string Status, string Service);
 }

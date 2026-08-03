@@ -27,6 +27,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LatticeForge.Api\LatticeForge.Api.csproj" />
+    <ProjectReference Include="..\..\src\LatticeForge.Domain\LatticeForge.Domain.csproj" />
+    <ProjectReference Include="..\..\src\LatticeForge.UseCase\LatticeForge.UseCase.csproj" />
+    <ProjectReference Include="..\..\src\LatticeForge.Services\LatticeForge.Services.csproj" />
+    <ProjectReference Include="..\..\src\LatticeForge.Infrastructure\LatticeForge.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

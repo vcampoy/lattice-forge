@@ -1,6 +1,6 @@
-using LatticeForge.Api.Manufacturing;
+using LatticeForge.Domain.Manufacturing;
 
-namespace LatticeForge.Api.Persistence;
+namespace LatticeForge.Infrastructure.Persistence;
 
 public sealed class DesignEntity
 {
