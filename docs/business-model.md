@@ -134,3 +134,7 @@ Phase 09 adds no new product capability. It reduces demo risk by making the exis
 Phase 10 adds no product capability or commercial claim. It makes the existing value proposition easier to communicate: one deterministic DfAM interaction connects parametric design, a conceptual lattice, and illustrative manufacturing estimates while clearly separating demo behaviour from engineering validation.
 
 The new README and interview script improve reviewer understanding and presenter consistency. The one-command launcher reduces setup friction for an interview without changing the supported local workflow or introducing a production deployment promise. Genuine next steps remain validated manufacturing models, watertight export validation, production persistence, browser/device coverage, and operational observability.
+
+## Phase 11 — Adversarial release review
+
+The review repaired procedural geometry safety, frontend request lifecycle behavior, and Windows-safe export naming. No product proposition, pricing assumption, manufacturing claim, or user workflow changed. The demo remains an illustrative design-exploration workspace and does not claim engineering validation or production-ready lattice export.

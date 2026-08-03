@@ -24,9 +24,9 @@ This documentation describes the product and the software that exist today. It i
 | 08 | Implemented | SQLite persistence, saved designs, conceptual STL/JSON export, and explicit export limitations |
 | 09 | Implemented | Responsive hardening, accessibility, reduced motion, WebGL lifecycle handling, and bounded rendering costs |
 | 10 | Implemented | Interview-ready README, technical walkthrough, and one-command local development launcher |
-| 11 | Planned | Fresh-context adversarial release review and targeted repair |
+| 11 | Implemented | Fresh-context adversarial review, targeted geometry/request-lifecycle/export repairs, and release verification |
 
-The current UI is an industrial workspace with a procedural Three.js bracket viewport. Geometry controls update the procedural bracket live, phase 05 adds a bounded conceptual lattice with Solid/Optimized/Compare views, phase 06 adds live API analysis, phase 07 adds the controlled optimization scan with deterministic risk heatmap, phase 08 adds local persistence and conceptual exports, and phase 09 hardens the responsive/accessibility/performance boundary. Phase 10 makes the repository ready to explain and run in an interview; phase 11 remains the final adversarial review.
+The current UI is an industrial workspace with a procedural Three.js bracket viewport. Geometry controls update the procedural bracket live, phase 05 adds a bounded conceptual lattice with Solid/Optimized/Compare views, phase 06 adds live API analysis, phase 07 adds the controlled optimization scan with deterministic risk heatmap, phase 08 adds local persistence and conceptual exports, and phase 09 hardens the responsive/accessibility/performance boundary. Phase 10 makes the repository ready to explain and run in an interview; phase 11 completed the final adversarial review and targeted repairs.
 
 ## Documentation ownership
 

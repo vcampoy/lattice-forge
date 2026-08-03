@@ -8,6 +8,7 @@ import {
   type ManufacturingProcess,
   type MaterialOption,
 } from './useDesignStore'
+import { getBracketHoleRadiusLimit } from './geometry/geometryParameters'
 const PROCESS_LABELS: Record<ManufacturingProcess, string> = {
   Sls: 'SLS · Polymer',
   Sla: 'SLA · Resin',
@@ -29,7 +30,7 @@ function limitsFor(parameter: DesignParameter, values: Record<DesignParameter, n
     return { ...base, max: Math.max(base.min, Math.min(base.max, Math.min(values.length, values.height) / 2 - 0.1)) }
   }
   if (parameter === 'holeRadius') {
-    return { ...base, max: Math.max(base.min, Math.min(values.length, values.height) / 2 - values.wallThickness - 0.1) }
+    return { ...base, max: Math.max(base.min, Math.min(base.max, getBracketHoleRadiusLimit(values))) }
   }
   return base
 }

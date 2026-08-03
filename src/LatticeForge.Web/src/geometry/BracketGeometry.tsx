@@ -1,7 +1,7 @@
 import { Edges } from '@react-three/drei'
 import { useEffect, useMemo, useState } from 'react'
 import { ExtrudeGeometry, MeshPhysicalMaterial, Path, Plane, Shape } from 'three'
-import type { BracketGeometryParameters } from './geometryParameters'
+import { getBracketSilhouetteDimensions, type BracketGeometryParameters } from './geometryParameters'
 
 type BracketGeometryProps = {
   parameters: BracketGeometryParameters
@@ -11,8 +11,7 @@ type BracketGeometryProps = {
 export function createBracketGeometry(parameters: BracketGeometryParameters): ExtrudeGeometry {
   const halfLength = parameters.length / 2
   const halfHeight = parameters.height / 2
-  const armHeight = Math.max(parameters.wallThickness * 2.5, parameters.height * 0.2)
-  const webHalfWidth = Math.max(parameters.wallThickness * 2, parameters.length * 0.14)
+  const { armHeight, webHalfWidth } = getBracketSilhouetteDimensions(parameters)
 
   const silhouette = new Shape()
   silhouette.moveTo(-halfLength, -halfHeight)

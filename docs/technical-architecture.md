@@ -194,13 +194,25 @@ The shell uses semantic headings, labelled controls, live API status, visible fo
 
 Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. `geometryParameters.test.ts` protects pure normalization before values reach Three.js. They run in jsdom through Vitest and Testing Library. `pnpm test`, `pnpm build`, and `pnpm lint` are the current frontend checks.
 
+## Release review repairs (phase 11)
+
+The adversarial review confirmed four low-risk correctness issues plus one presentation defect and repaired them without redesigning the application:
+
+- `getBracketSilhouetteDimensions` clamps arm height and central web width below half of the bracket envelope. This prevents self-intersecting procedural silhouettes at the smallest supported dimensions and thickest UI wall setting before `ExtrudeGeometry` receives them.
+- `useManufacturingAnalysis` keys its effect by the serialized query contract instead of object identity. A caller that recreates an equivalent request object no longer restarts the debounce after each state update, while changed queries still abort stale requests and use the sequence guard.
+- Analysis state is cleared immediately when the design query changes, so stale metrics are not presented while the next authoritative response is pending.
+- Geometry normalization limits mounting-hole radius to the generated arm as well as the overall face, and export filename sanitization rejects Windows device names such as `CON` and `NUL`.
+- The viewport labels use ASCII separators (`/` and `x`) to avoid mojibake in the interview UI.
+
+The remaining lint warning is the pre-existing `react(only-export-components)` warning for the exported geometry factory in `BracketGeometry.tsx`; changing that module boundary would be broader than this targeted review.
+
 ## Three.js viewport (phase 03)
 
 `ThreeViewport.tsx` owns the Canvas boundary, WebGL capability fallback, DPR cap, camera labels, and reset action. `BracketScene.tsx` owns camera, constrained damped `OrbitControls`, procedural studio lights, contact shadows, and the optional floor grid. `BracketGeometry.tsx` owns the generated mechanical silhouette and its GPU resources.
 
 The scene scale is **1 world unit = 1 millimetre**. `normalizeBracketParameters` clamps non-finite or unsafe values before they reach `Shape` and `ExtrudeGeometry`. The bracket is an extruded XY silhouette with two `Shape.holes` mounting holes and bevelled edges. Titanium-like `MeshPhysicalMaterial` and restrained cyan `Edges` provide the visual treatment; pointer hover and click update material feedback without rebuilding geometry.
 
-Geometry and material instances are memoized by geometry parameters and disposed on replacement or unmount. No render-loop allocations are introduced. The Canvas caps device pixel ratio at 1.75 and uses only local procedural lighting; no HDR or remote runtime asset is required. A narrow or unavailable WebGL context leaves the surrounding design and analysis panels usable.
+Geometry and material instances are memoized by geometry parameters and disposed on replacement or unmount. No render-loop allocations are introduced. The Canvas caps device pixel ratio at 1.5 on desktop and 1 on narrow screens, and uses only local procedural lighting; no HDR or remote runtime asset is required. A narrow or unavailable WebGL context leaves the surrounding design and analysis panels usable.
 
 
 ## Parametric design controls (phase 04)

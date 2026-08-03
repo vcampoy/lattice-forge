@@ -131,6 +131,59 @@ Phase 04 will connect shared design controls to the Three.js scene and preserve 
 - `docs/business-model.md`
 - `docs/implementation-log.md`
 
+## Phase 11 — Fresh-context adversarial review and targeted repair
+
+**Status:** Implemented
+
+### Findings and evidence
+
+- **Critical:** None confirmed. Startup commands, API routes, persistence boundaries, and required verification paths remained runnable.
+- **Warning:** Procedural silhouette dimensions could self-intersect at the smallest supported envelope and thick wall setting. The repair clamps arm height and web width before `ExtrudeGeometry`; focused geometry tests cover the edge case.
+- **Warning:** Hole-radius controls could expose a face-based maximum larger than the generated mounting arm. Normalization and control limits now share the generated-arm bound.
+- **Warning:** Analysis could briefly display a previous successful result while a changed design waited through debounce. The hook now clears status, data, and error immediately, while retaining cancellation and sequence ordering.
+- **Warning:** Windows device names could produce unsafe export filenames. `sanitizeFilename` now falls back for `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, and `LPT1`-`LPT9`.
+- **Suggestion:** The production Vite bundle remains above the 500 kB advisory threshold. No split or dependency migration was made because that would exceed phase-11 targeted repair scope.
+
+### Delivered scope
+
+- Preserved and verified the in-flight silhouette edge-case repair found during the fresh audit.
+- Added shared geometry-safe hole-radius bounds and aligned the UI range maximum with normalization.
+- Cleared stale analysis presentation state on query changes and retained serialized-query debounce, abort cleanup, and sequence guards.
+- Hardened export filename sanitization and corrected the preset modified indicator after normalization made preset values safe.
+- Replaced mojibake-prone viewport separators with ASCII labels; no product or manufacturing claim changed.
+
+### TDD evidence
+
+Each targeted repair followed focused red-green verification:
+
+- `useManufacturingAnalysis.test.tsx`: red with `expected 'idle' / Received 'success'`, then green after immediate stale-state clearing.
+- `designPersistence.test.ts`: red with `CON.stl`, then green after reserved-device-name fallback.
+- `geometryParameters.test.ts`: red with `expected 8 / Received 30`, then green after arm-bound normalization. Existing edge assertions remained green.
+- `DesignControls.test.tsx`: red with `expected max="8" / Received max="35.9"`, then green after the shared limit was wired into the control.
+- Full frontend suite exposed a preset regression after normalization; `useDesignStore.test.ts` was green after comparing against normalized preset values, and the full suite returned green.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| `dotnet build LatticeForge.sln` | Passed; 0 warnings, 0 errors |
+| `dotnet test LatticeForge.sln` | Passed; 19 tests |
+| `pnpm test` in `src/LatticeForge.Web` | Passed; 14 files, 51 tests |
+| `pnpm build` in `src/LatticeForge.Web` | Passed; Vite emitted the existing non-blocking 1,173.23 kB chunk advisory |
+
+### Decisions and remaining limitations
+
+- Kept the fixes local to existing geometry, hook, store, control, export, test, and documentation boundaries. No redesign, dependency migration, or broad rewrite was introduced.
+- No business-model change was needed; the product remains illustrative and not engineering validation.
+- Browser/device accessibility, real WebGL context recovery, raw orbit keyboard equivalence, watertight lattice validation, production migrations, and bundle splitting remain out of scope.
+
+### Documentation changed
+
+- `docs/README.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`
+
 ## Phase 04 â€” Live parametric design controls
 
 **Status:** Implemented
@@ -431,6 +484,51 @@ The phase tests cover creation, restart restoration, validation, corrupted rows,
 - `README.md`
 - `docs/README.md`
 - `docs/INTERVIEW_SCRIPT.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`
+
+## Phase 11 — Fresh-context adversarial review and repair
+
+**Status:** Implemented
+
+### Findings and targeted repairs
+
+- Fixed procedural silhouette edge cases: arm height and central web width are clamped below half the supported envelope, and hole radius is limited to the generated mounting arm as well as the face bounds.
+- Fixed analysis lifecycle behavior: equivalent recreated query objects no longer restart the debounce, stale analysis data is cleared immediately when the design changes, and stale responses remain blocked by abort plus sequence guards.
+- Fixed Windows export safety by rejecting reserved device basenames such as `CON`, `PRN`, `AUX`, `NUL`, `COM1`, and `LPT1`.
+- Fixed mojibake in the viewport dimension/status labels.
+- Kept preset modification state correct after geometry normalization by comparing against the normalized active preset.
+
+### TDD evidence
+
+- RED: the new silhouette test failed because `getBracketSilhouetteDimensions` did not exist; the new analysis lifecycle test exposed repeated requests when callers recreated equivalent query objects; the full suite also exposed the hole-radius/preset normalization edge cases.
+- GREEN: the focused geometry, persistence, analysis-hook, and API-client tests passed after the smallest fixes; the full frontend suite passed afterward.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| `dotnet build LatticeForge.sln` | Passed — 0 warnings, 0 errors |
+| `dotnet test LatticeForge.sln` | Passed — 19 tests |
+| `pnpm test` in `src/LatticeForge.Web` | Passed — 14 files, 51 tests |
+| `pnpm build` in `src/LatticeForge.Web` | Passed; existing Vite chunk-size advisory remains |
+| `pnpm lint` in `src/LatticeForge.Web` | Passed; existing `react(only-export-components)` warning remains in `BracketGeometry.tsx` |
+| `git diff --check` | Passed |
+
+### Remaining known risks
+
+- The frontend bundle remains above the Vite 500 kB advisory threshold.
+- Real browser/device, WebGL context recovery, screen-reader, and visual regression coverage remain outside Vitest.
+- The exported lattice remains conceptual and is not validated for watertightness or printability.
+
+### Go/no-go
+
+**Go** for the interview demo. No Critical findings remain; known limitations are documented and the required build/test commands pass.
+
+### Documentation changed
+
+- `docs/README.md`
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`

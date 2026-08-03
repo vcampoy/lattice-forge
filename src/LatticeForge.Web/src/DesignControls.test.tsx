@@ -23,6 +23,11 @@ describe('DesignControls', () => {
     expect(screen.getByRole('slider', { name: /lattice density/i })).toBeInTheDocument()
     expect(screen.getByRole('spinbutton', { name: /lattice density/i })).toBeInTheDocument()
   })
+  it('exposes the generated mounting-arm limit for hole radius', () => {
+    render(<DesignControls materials={[{ id: 'aluminum-sls', name: 'Aluminium PA', process: 'Sls' }]} />)
+
+    expect(screen.getByRole('slider', { name: /hole radius/i })).toHaveAttribute('max', '8')
+  })
   it('updates the same store when a range is dragged and supports presets/reset', () => {
     render(<DesignControls materials={[{ id: 'aluminum-sls', name: 'Aluminium PA', process: 'Sls' }]} />)
     fireEvent.change(screen.getByRole('slider', { name: /overall length/i }), { target: { value: '160' } })

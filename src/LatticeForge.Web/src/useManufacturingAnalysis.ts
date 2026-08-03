@@ -21,22 +21,28 @@ export function useManufacturingAnalysis(query: AnalysisQuery, options: Analysis
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
   const sequence = useRef(0)
+  const queryRef = useRef(query)
+  queryRef.current = query
   const queryKey = useMemo(() => JSON.stringify(query), [query])
   const retry = useCallback(() => setRetryKey((key) => key + 1), [])
 
   useEffect(() => {
     if (!enabled) {
       setStatus('idle')
+      setData(null)
+      setError(null)
       return undefined
     }
+    setStatus('idle')
+    setData(null)
+    setError(null)
     const controller = new AbortController()
     const requestSequence = sequence.current + 1
     sequence.current = requestSequence
     const timer = window.setTimeout(async () => {
       setStatus('loading')
-      setError(null)
       try {
-        const result = await createManufacturingAnalysis(query, controller.signal)
+        const result = await createManufacturingAnalysis(queryRef.current, controller.signal)
         if (sequence.current !== requestSequence || controller.signal.aborted) return
         setData(result)
         setStatus('success')
@@ -59,7 +65,7 @@ export function useManufacturingAnalysis(query: AnalysisQuery, options: Analysis
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [debounceMs, enabled, query, queryKey, retryKey])
+  }, [debounceMs, enabled, queryKey, retryKey])
 
   return { status, data, error, retry }
 }

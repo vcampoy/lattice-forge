@@ -30,6 +30,9 @@ export function sanitizeFilename(value: string, fallback = 'lattice-design'): st
     .replace(/-+(?=\.)/g, '')
     .replace(/^[.-]+|[.-]+$/g, '')
 
+  const deviceName = sanitized.split('.')[0]?.toUpperCase()
+  if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/.test(deviceName ?? '')) return fallback
+
   return sanitized.length > 0 ? sanitized : fallback
 }
 

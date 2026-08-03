@@ -38,6 +38,19 @@ describe('useManufacturingAnalysis', () => {
     expect(result.current.data?.printabilityScore).toBe(88)
   })
 
+  it('does not restart analysis when an equivalent query object is recreated by the caller', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(analysis), { status: 200 })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useManufacturingAnalysis({
+      ...query,
+      parameters: { ...query.parameters },
+    }, { debounceMs: 0 }))
+
+    await waitFor(() => expect(result.current.status).toBe('success'))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it('aborts stale requests and keeps only the newest result', async () => {
     let resolveFirst: ((response: Response) => void) | undefined
     const firstResponse = new Promise<Response>((resolve) => { resolveFirst = resolve })

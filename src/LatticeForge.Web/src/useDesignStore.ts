@@ -86,5 +86,5 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     selectedMaterialId: materialId,
     activePreset: 'Balanced',
   })),
-  isModified: () => !equalsDesign(get(), PRESETS[get().activePreset]),
+  isModified: () => !equalsDesign(get(), normalizeDesign(PRESETS[get().activePreset])),
 }))

@@ -22,6 +22,10 @@ describe('design persistence and export helpers', () => {
     expect(sanitizeFilename('***')).toBe('lattice-design')
   })
 
+  it('sanitizeFilename_should_replace_reserved_windows_device_names', () => {
+    expect(sanitizeFilename('CON.stl')).toBe('lattice-design')
+  })
+
   it('createDesignExportJson_should_include_schema_version_and_illustrative_disclaimer', () => {
     const payload = JSON.parse(createDesignExportJson(design)) as Record<string, unknown>
 

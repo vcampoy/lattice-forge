@@ -103,7 +103,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
     <div ref={viewportRef} className="viewport-card viewport-three" data-testid="three-viewport">
       <div className="viewport-toolbar">
         <span className="viewport-kicker">3D Preview</span>
-        <span className="viewport-status">Parametric bracket Â· A-001</span>
+        <span className="viewport-status">Parametric bracket / A-001</span>
       </div>
       <div className="viewport-scene">
         {webglAvailable ? (
@@ -168,7 +168,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
         <span className="risk-pattern">/// = review surface</span>
       </div>}
       <div className="viewport-toolbar viewport-toolbar-bottom">
-        <span className="viewport-camera-label" aria-label="Current dimensions">{cameraLabel} Â· {parameters.length} Ã— {parameters.height} Ã— {parameters.depth} mm</span>
+        <span className="viewport-camera-label" aria-label="Current dimensions">{cameraLabel} / {parameters.length} x {parameters.height} x {parameters.depth} mm</span>
         <button className="viewport-reset" type="button" onClick={() => resetView?.()} disabled={!webglAvailable || resetView === null}>
           <RotateCcw size={13} /> Reset view
         </button>
