@@ -39,6 +39,11 @@ const viewModes: Array<{ id: ViewMode; label: string; icon: typeof Orbit }> = [
   { id: 'front', label: 'Front', icon: Cuboid },
   { id: 'section', label: 'Section', icon: Layers3 },
 ]
+const designViewModes: Array<{ id: 'solid' | 'optimized' | 'compare'; label: string; icon: typeof Box }> = [
+  { id: 'solid', label: 'Solid', icon: Box },
+  { id: 'optimized', label: 'Optimized', icon: Waypoints },
+  { id: 'compare', label: 'Compare', icon: Layers3 },
+]
 
 function App() {
   const [healthState, setHealthState] = useState<HealthState>('checking')
@@ -125,7 +130,7 @@ function App() {
         </aside>
 
         <section className="viewport-region" aria-label="3D design viewport" role="region">
-          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} />
+          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} designViewMode={design.designViewMode} />
         </section>
 
         <aside className="panel analysis-panel" aria-labelledby="analysis-title">
@@ -150,6 +155,9 @@ function App() {
           {viewModes.map(({ id, label, icon: Icon }) => <button key={id} className={`view-tool ${viewMode === id ? 'active' : ''}`} type="button" aria-pressed={viewMode === id} onClick={() => setViewMode(id)}><Icon size={14} /> {label}</button>)}
           <span className="toolbar-divider" aria-hidden="true" />
           <button className={`view-tool ${showGrid ? 'active' : ''}`} type="button" aria-pressed={showGrid} onClick={toggleGrid}><Grid3X3 size={14} /> Grid</button>
+          <span className="toolbar-divider" aria-hidden="true" />
+          <span className="view-group-label">Design view</span>
+          {designViewModes.map(({ id, label, icon: Icon }) => <button key={id} className={`view-tool ${design.designViewMode === id ? 'active' : ''}`} type="button" aria-pressed={design.designViewMode === id} onClick={() => design.setDesignViewMode(id)}><Icon size={14} /> {label}</button>)}
         </div>
         <div className="footer-meta"><span><MousePointer2 size={12} /> Drag to orbit</span><span><Maximize2 size={12} /> Scroll to zoom</span><span>LATFORGE / 02.00</span></div>
       </footer>
@@ -165,8 +173,8 @@ function Metric({ label, value, unit }: { label: string; value: string; unit: st
   return <div className="metric"><span>{label}</span><strong>{value}<small>{unit}</small></strong></div>
 }
 
-function Viewport({ showGrid, viewMode, parameters }: { showGrid: boolean; viewMode: ViewMode; parameters: { length: number; height: number; depth: number; wallThickness: number; holeRadius: number } }) {
-  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} parameters={parameters} />
+function Viewport({ showGrid, viewMode, parameters, designViewMode }: { showGrid: boolean; viewMode: ViewMode; parameters: { length: number; height: number; depth: number; wallThickness: number; holeRadius: number; latticeDensity: number }; designViewMode: 'solid' | 'optimized' | 'compare' }) {
+  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} />
 }
 
 export default App

@@ -211,6 +211,11 @@ Geometry and material instances are memoized by geometry parameters and disposed
 
 `ThreeViewport` passes the current normalized dimensions through `BracketScene` to `BracketGeometry`, so all five geometric dimensions update the visible bracket while dragging. The viewport dimensions label is derived from the same state. API analysis requests, lattice rendering, persistence, and export remain intentionally out of scope.
 
+## Lattice reveal and comparison (phase 05)
+
+`latticeStructure.ts` contains the pure deterministic lattice generator. It maps normalized 0–100 density to repeated diagonal pairs across bounded X/Y/Z cells. An explicit hard cap of `LATTICE_MAX_INSTANCES = 512` bounds GPU work; endpoints are inset by wall thickness from the bracket envelope. This is a conceptual lightweighting visualization, not a validated octet-truss or printable lattice.
+
+`LatticeStructureView.tsx` renders all struts through one Three.js `InstancedMesh`, reusing cylinder geometry and a cyan/titanium material. Matrices update only when parameters change; geometry and material are disposed on replacement or unmount. `useDesignStore.designViewMode` drives `solid`, `optimized`, and `compare`. Compare mode uses opposing local clipping planes and a luminous boundary; the viewport handle supports pointer dragging and arrow/Home/End keyboard input.
 ## Current constraints
 
 - The catalogue is compiled into the API; there is no administrative or persistence layer.
@@ -224,7 +229,7 @@ Geometry and material instances are memoized by geometry parameters and disposed
 
 The following capabilities appear in the build plan but **do not exist in the current application**:
 
-- lattice reveal, comparison mode, or heatmap;
+- optimization scan and risk heatmap;
 - live manufacturing-analysis integration in the UI;
 - optimization animation;
 - SQLite persistence and STL export;

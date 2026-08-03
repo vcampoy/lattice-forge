@@ -51,7 +51,7 @@ The intended workflow is:
 5. Review warnings and the illustrative-estimate disclaimer.
 6. Save or export the concept for further work.
 
-**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, an interactive parametric bracket viewport with orbit/reset controls, live dimension controls, presets, and process/material compatibility filtering. Analysis, lattice reveal, persistence, and export are not integrated.
+**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, an interactive parametric bracket viewport with orbit/reset controls, live dimension controls, presets, process/material compatibility filtering, conceptual lattice reveal, and Solid/Optimized/Compare views. Live analysis integration, persistence, and export are not integrated.
 
 ## Business assumptions
 
@@ -62,6 +62,8 @@ The intended workflow is:
 - Trust increases when model assumptions and units are visible rather than hidden behind a score.
 
 The phase 04 interaction adds a testable assumption that immediate, bounded geometry feedback improves early design conversations; this still requires user and domain-expert validation before commercial use.
+
+Phase 05 adds a testable assumption that direct Solid-versus-Optimized visual comparison helps stakeholders discuss lightweighting tradeoffs faster than controls or metrics alone. The lattice is explicitly conceptual and must not be treated as printable engineering output.
 
 ## Illustrative metrics
 
@@ -91,7 +93,7 @@ This is a prototype hypothesis. No market comparison or customer validation has 
 | Illustrative values mistaken for engineering results | Every analysis returns `illustrativeEstimate: true`; product copy and documentation repeat the limitation |
 | Material profiles treated as supplier specifications | Catalogue entries are described as deterministic demo data |
 | Printability score creates false confidence | Score is documented as a bounded heuristic and accompanied by warnings |
-| Unsafe geometry exported or manufactured | Engineering validation and production export are outside current implemented scope |
+| Unsafe geometry exported or manufactured | Engineering validation and production export are outside current implemented scope; phase 05 lattice is conceptual only |
 | Third-party affiliation inferred | The project uses its own identity and makes no affiliation or endorsement claim |
 
 ## Disclaimer

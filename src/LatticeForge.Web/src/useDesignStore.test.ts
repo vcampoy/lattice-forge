@@ -39,6 +39,15 @@ describe('design store', () => {
     expect(read().selectedProcess).toBe('Sla')
     expect(read().selectedMaterialId).toBe('resin-sla')
   })
+  it('switches between solid, optimized, and compare design views', () => {
+    read().resetDesign()
+    read().setDesignViewMode('optimized')
+    expect(read().designViewMode).toBe('optimized')
+    read().setDesignViewMode('compare')
+    expect(read().designViewMode).toBe('compare')
+    read().setDesignViewMode('solid')
+    expect(read().designViewMode).toBe('solid')
+  })
   it('exposes every design parameter through a typed setter', () => {
     const parameters: DesignParameter[] = ['length', 'height', 'depth', 'wallThickness', 'holeRadius', 'latticeDensity']
     read().resetDesign()

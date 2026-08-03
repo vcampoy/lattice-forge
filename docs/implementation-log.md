@@ -170,3 +170,41 @@ Phase 04 turns the prototype from a static viewport into an explorable design co
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+## Phase 05 — Lattice reveal and comparison modes
+
+**Status:** Implemented
+
+### Phase 05 delivered
+
+- Added a pure bounded diagonal lattice generator with a documented hard maximum of 512 instanced struts.
+- Added a single `InstancedMesh` lattice renderer with memoized geometry/material and explicit GPU disposal.
+- Added Solid, Optimized, and Compare design-view controls to the bottom toolbar.
+- Added a draggable and keyboard-adjustable compare split handle with an in-scene luminous boundary and opposing local clipping planes.
+- Labelled the lattice as a conceptual visualization; no printability or optimization claim was added.
+- Preserved phase 00–04 API, controls, geometry, and responsive shell behaviour.
+
+### Phase 05 verification
+
+| Command | Result |
+|---|---|
+| `npm test` in `src/LatticeForge.Web` | Passed — 18 tests |
+| `npm run build` in `src/LatticeForge.Web` | Passed (Vite emitted a non-blocking large-chunk advisory) |
+| `npm run lint` in `src/LatticeForge.Web` | Passed |
+| `dotnet test LatticeForge.sln --no-restore` | Passed — 12 tests |
+
+### Phase 05 decisions and tradeoffs
+
+- Used diagonal cell pairs rather than a full octet-truss solver to keep the interview visual deterministic and bounded; this is not a manufacturing-ready lattice.
+- Used material clipping planes for compare mode instead of duplicating or rebuilding geometry during dragging, keeping pointer interaction responsive.
+- Kept split state local to the viewport presentation boundary; design parameters remain owned by the Zustand store.
+
+### Business impact
+
+Phase 05 makes the lightweighting story visible in one gesture and supports a before/after conversation. It adds no pricing, engineering validation, or production capability.
+
+### Documentation changed
+
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`

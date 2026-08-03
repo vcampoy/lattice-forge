@@ -1,10 +1,11 @@
 import { Edges } from '@react-three/drei'
 import { useEffect, useMemo, useState } from 'react'
-import { ExtrudeGeometry, MeshPhysicalMaterial, Path, Shape } from 'three'
+import { ExtrudeGeometry, MeshPhysicalMaterial, Path, Plane, Shape } from 'three'
 import type { BracketGeometryParameters } from './geometryParameters'
 
 type BracketGeometryProps = {
   parameters: BracketGeometryParameters
+  clipPlane?: Plane
 }
 
 function createBracketGeometry(parameters: BracketGeometryParameters): ExtrudeGeometry {
@@ -52,7 +53,7 @@ function createBracketGeometry(parameters: BracketGeometryParameters): ExtrudeGe
   return geometry
 }
 
-export function BracketGeometry({ parameters }: BracketGeometryProps) {
+export function BracketGeometry({ parameters, clipPlane }: BracketGeometryProps) {
   const [hovered, setHovered] = useState(false)
   const [selected, setSelected] = useState(false)
   const { depth, height, holeRadius, length, wallThickness } = parameters
@@ -69,8 +70,9 @@ export function BracketGeometry({ parameters }: BracketGeometryProps) {
       clearcoatRoughness: 0.18,
       emissive: '#062d31',
       emissiveIntensity: 0.16,
+      clippingPlanes: clipPlane ? [clipPlane] : [],
     }),
-    [],
+    [clipPlane],
   )
 
   useEffect(() => {
