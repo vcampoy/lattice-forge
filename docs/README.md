@@ -4,19 +4,19 @@ This documentation describes the product and the software that exist today. It i
 
 ## Reading order
 
-1. [Business model](business-model.md) â€” the problem, users, value, assumptions, and responsible product boundaries.
-2. [Technical architecture](technical-architecture.md) â€” the running system, contracts, calculations, validation, and test strategy.
-3. [Implementation log](implementation-log.md) â€” the evidence and decisions recorded after each build phase.
-4. [Build prompts](../prompts/BUILD_PROMPTS.md) â€” the phased implementation plan, including work not yet delivered.
+1. [Business model](business-model.md) — the problem, users, value, assumptions, and responsible product boundaries.
+2. [Technical architecture](technical-architecture.md) — the running system, contracts, calculations, validation, and test strategy.
+3. [Implementation log](implementation-log.md) — the evidence and decisions recorded after each build phase.
+4. [Build prompts](../prompts/BUILD_PROMPTS.md) — the phased implementation plan, including work not yet delivered.
 
 ## Current status
 
 | Phase | Status | Outcome |
 |---|---|---|
-| 00 â€” Full-stack foundation | Implemented | .NET API, React/Vite client, API health check, and development proxy |
-| 01 â€” Manufacturing analysis | Implemented | Deterministic material catalogue and illustrative analysis API |
-| 02 ? Industrial workspace shell | Implemented | Responsive workspace frame, design controls, analysis panel, view toolbar, Zustand UI state, and accessible component tests |
-| 03 ? Parametric Three.js viewport | Implemented | Procedural bracket geometry, orbit/reset camera, studio lighting, floor grid, WebGL fallback, and geometry normalization tests |
+| 00 — Full-stack foundation | Implemented | .NET API, React/Vite client, API health check, and development proxy |
+| 01 — Manufacturing analysis | Implemented | Deterministic material catalogue and illustrative analysis API |
+| 02 — Industrial workspace shell | Implemented | Responsive workspace frame, design controls, analysis panel, view toolbar, Zustand UI state, and accessible component tests |
+| 03 — Parametric Three.js viewport | Implemented | Procedural bracket geometry, orbit/reset camera, studio lighting, floor grid, WebGL fallback, and geometry normalization tests |
 | 04 | Implemented | Typed live design controls, shared geometry state, presets, material/process compatibility, and live Three.js updates |
 | 05 | Implemented | Bounded instanced lattice, Solid/Optimized/Compare modes, and draggable/keyboard comparison split |
 | 06 | Implemented | Live API analysis, debounced cancellation, resilient states, comparison metrics, and illustrative disclosure |
