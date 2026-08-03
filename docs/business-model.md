@@ -1,6 +1,6 @@
-# Business model
+﻿# Business model
 
-Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype now combines a deterministic analysis API, a procedural Three.js bracket viewport, and live parametric design controls; manufacturing optimization and analysis integration remain planned.
+Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype combines a deterministic analysis API, a procedural Three.js bracket viewport, live parametric design controls, local design persistence, and conceptual export; manufacturing validation remains planned.
 
 ## Problem
 
@@ -27,7 +27,7 @@ The current interview demo primarily serves technical reviewers and hiring stake
 
 ## Value proposition
 
-Lattice Forge combines a future interactive 3D workspace with a deterministic analysis contract. Its intended value is rapid, explainable exploration—not automatic engineering approval.
+Lattice Forge combines a future interactive 3D workspace with a deterministic analysis contract. Its intended value is rapid, explainable explorationâ€”not automatic engineering approval.
 
 Today, the implemented value is narrower:
 
@@ -51,7 +51,7 @@ The intended workflow is:
 5. Review warnings and the illustrative-estimate disclaimer.
 6. Save or export the concept for further work.
 
-**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, an interactive parametric bracket viewport with orbit/reset controls, live dimension controls, presets, process/material compatibility filtering, conceptual lattice reveal, and Solid/Optimized/Compare views. Live analysis integration, persistence, and export are not integrated.
+**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, an interactive parametric bracket viewport with orbit/reset controls, live dimension controls, presets, process/material compatibility filtering, conceptual lattice reveal, Solid/Optimized/Compare views, live analysis integration, local design persistence, and demo STL/JSON export. Exports and metrics remain illustrative; the lattice is not validated for watertightness or printability.
 
 ## Business assumptions
 
@@ -93,7 +93,7 @@ This is a prototype hypothesis. No market comparison or customer validation has 
 | Illustrative values mistaken for engineering results | Every analysis returns `illustrativeEstimate: true`; product copy and documentation repeat the limitation |
 | Material profiles treated as supplier specifications | Catalogue entries are described as deterministic demo data |
 | Printability score creates false confidence | Score is documented as a bounded heuristic and accompanied by warnings |
-| Unsafe geometry exported or manufactured | Engineering validation and production export are outside current implemented scope; phase 05 lattice is conceptual only |
+| Unsafe geometry exported or manufactured | Export is clearly labelled as a conceptual demo mesh; watertightness, printability, and engineering validation remain outside scope |
 | Third-party affiliation inferred | The project uses its own identity and makes no affiliation or endorsement claim |
 
 ## Disclaimer
@@ -106,7 +106,7 @@ The product concept supports early exploration and communication. It does not re
 
 No pricing model, commercial packaging, production tenancy, or revenue forecast is defined. Those decisions would be premature without validated users, workflows, and model fidelity.
 
-## Phase 06 — Live analysis experience
+## Phase 06 â€” Live analysis experience
 
 The right panel now consumes the real ASP.NET Core analysis contract as users adjust geometry, material, or process. Debouncing protects the API during slider movement; cancellation ensures the visible result always belongs to the current design. Success, validation, unavailable, and retry states make the workflow trustworthy instead of hiding failures.
 
@@ -121,3 +121,7 @@ This strengthens the interview-demo hypothesis that a guided transition can comm
 ## Tooling impact
 
 The npm-to-pnpm frontend tooling migration has no product, pricing, or manufacturing-model impact. It changes dependency installation and reproducibility only; product scope and illustrative equations remain unchanged.
+
+## Phase 08 — Persistence and export experience
+
+Named local design snapshots and recent-design loading make the demo journey recoverable without introducing accounts or a production data model. STL and JSON export make the concept portable for discussion, but the product deliberately discloses that the lattice is a demo mesh and has not been checked for watertightness or printability. This improves interview-demo usefulness without turning illustrative analysis into a manufacturing promise.

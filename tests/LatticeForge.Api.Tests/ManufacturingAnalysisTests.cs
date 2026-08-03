@@ -48,6 +48,17 @@ public sealed class ManufacturingAnalysisTests
     }
 
     [Fact]
+    public void Analyze_should_reject_non_finite_parameters_when_a_dimension_is_not_finite()
+    {
+        ManufacturingAnalysisService service = new(MaterialCatalogue.All);
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            service.Analyze(ValidParameters with { Length = double.NaN }, "aluminum-sls", ManufacturingProcess.Sls));
+
+        Assert.Contains("Length", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Analyze_should_reject_wall_thickness_outside_safe_bounds_when_wall_exceeds_half_depth()
     {
         ManufacturingAnalysisService service = new(MaterialCatalogue.All);
@@ -112,11 +123,11 @@ public sealed class ManufacturingAnalysisTests
     }
 }
 
-public sealed class ManufacturingEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public ManufacturingEndpointsTests(WebApplicationFactory<Program> factory)
+    public ManufacturingEndpointsTests(IsolatedWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }

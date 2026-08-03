@@ -14,6 +14,7 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { DesignControls } from './DesignControls'
+import { DesignPersistenceControls } from './DesignPersistenceControls'
 import { ManufacturingAnalysisPanel } from './ManufacturingAnalysisPanel'
 import { ThreeViewport } from './geometry/ThreeViewport'
 import { useDesignStore, type MaterialOption } from './useDesignStore'
@@ -140,6 +141,7 @@ function App() {
             <span className="health-dot" aria-hidden="true" />
             {healthLabel}
           </div>
+          <DesignPersistenceControls />
           <button className="icon-button" type="button" aria-label="Workspace settings" title="Workspace settings">
             <Settings2 size={17} />
           </button>

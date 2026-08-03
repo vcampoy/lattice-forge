@@ -3,7 +3,6 @@ namespace LatticeForge.Api.Manufacturing;
 public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> materials)
 {
     private const double MillimetresPerCubicCentimetre = 1000;
-    private const double MaxDimensionMillimetres = 1000;
     private readonly Dictionary<string, MaterialProfile> _materials = materials
         .ToDictionary(material => material.Id, StringComparer.OrdinalIgnoreCase);
 
@@ -14,19 +13,9 @@ public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> 
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
-        ValidateParameters(parameters);
+        Validate(parameters, materialId, process);
 
-        if (!_materials.TryGetValue(materialId, out MaterialProfile? material))
-        {
-            throw new ArgumentException($"Material '{materialId}' was not found.", nameof(materialId));
-        }
-
-        if (material.Process != process)
-        {
-            throw new ArgumentException(
-                $"Material '{material.Id}' is not compatible with process '{process}'.",
-                nameof(process));
-        }
+        MaterialProfile material = _materials[materialId];
 
         double wallFactor = 0.22 + Math.Clamp(parameters.WallThickness / 20, 0, 1) * 0.08;
         double envelopeVolumeCubicMillimetres = parameters.Length * parameters.Height * parameters.Depth * wallFactor;
@@ -70,36 +59,20 @@ public sealed class ManufacturingAnalysisService(IReadOnlyList<MaterialProfile> 
             true);
     }
 
-    private static void ValidateParameters(BracketParameters parameters)
+    public void Validate(BracketParameters parameters, string materialId, ManufacturingProcess process)
     {
-        if (parameters.Length <= 0 || parameters.Length > MaxDimensionMillimetres)
+        BracketParametersValidator.Validate(parameters);
+
+        if (string.IsNullOrWhiteSpace(materialId) || !_materials.TryGetValue(materialId, out MaterialProfile? material))
         {
-            throw new ArgumentException("Length must be greater than 0 and no more than 1000 mm.", nameof(parameters));
+            throw new ArgumentException($"Material '{materialId}' was not found.", nameof(materialId));
         }
 
-        if (parameters.Height <= 0 || parameters.Height > MaxDimensionMillimetres)
+        if (material.Process != process)
         {
-            throw new ArgumentException("Height must be greater than 0 and no more than 1000 mm.", nameof(parameters));
-        }
-
-        if (parameters.Depth <= 0 || parameters.Depth > MaxDimensionMillimetres)
-        {
-            throw new ArgumentException("Depth must be greater than 0 and no more than 1000 mm.", nameof(parameters));
-        }
-
-        if (parameters.WallThickness <= 0 || parameters.WallThickness > Math.Min(parameters.Length, Math.Min(parameters.Height, parameters.Depth)) / 2)
-        {
-            throw new ArgumentException("Wall thickness must be positive and fit within the bracket dimensions.", nameof(parameters));
-        }
-
-        if (parameters.HoleRadius <= 0 || parameters.HoleRadius >= Math.Min(parameters.Length, parameters.Height) / 2)
-        {
-            throw new ArgumentException("Hole radius must be positive and fit within the bracket face.", nameof(parameters));
-        }
-
-        if (parameters.LatticeDensity is < 0 or > 1)
-        {
-            throw new ArgumentException("Lattice density must be between 0 and 1.", nameof(parameters));
+            throw new ArgumentException(
+                $"Material '{material.Id}' is not compatible with process '{process}'.",
+                nameof(process));
         }
     }
 }

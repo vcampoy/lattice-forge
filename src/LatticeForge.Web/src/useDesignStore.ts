@@ -56,6 +56,7 @@ type DesignStore = DesignParameters & {
   setMaterial: (materialId: string, materials?: readonly MaterialOption[]) => void
   setViewMode: (viewMode: ViewMode) => void
   setDesignViewMode: (viewMode: DesignViewMode) => void
+  loadDesign: (parameters: DesignParameters, process: ManufacturingProcess, materialId: string) => void
   isModified: () => boolean
 }
 export const useDesignStore = create<DesignStore>((set, get) => ({
@@ -79,5 +80,11 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
   }),
   setViewMode: (viewMode) => set({ viewMode }),
   setDesignViewMode: (designViewMode) => set({ designViewMode }),
+  loadDesign: (parameters, process, materialId) => set(() => ({
+    ...normalizeDesign(parameters),
+    selectedProcess: process,
+    selectedMaterialId: materialId,
+    activePreset: 'Balanced',
+  })),
   isModified: () => !equalsDesign(get(), PRESETS[get().activePreset]),
 }))

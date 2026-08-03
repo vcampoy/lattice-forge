@@ -30,3 +30,7 @@ pnpm lint
 ```
 
 The reproducible lockfile is `src/LatticeForge.Web/pnpm-lock.yaml`. No pnpm workspace is used because the repository has only one JavaScript package.
+
+## Persistence and export limits
+
+Saved designs use a local SQLite database created by the API at startup. STL and JSON exports are for this demo only: the conceptual lattice mesh has not been checked for watertightness or printability, and manufacturing metrics are illustrative estimates rather than engineering validation.
