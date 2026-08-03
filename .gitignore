@@ -76,6 +76,7 @@ nunit-*.xml
 **/dist-ssr/
 **/.vite/
 **/coverage/
+.pnpm-store/
 .nyc_output/
 *.tsbuildinfo
 

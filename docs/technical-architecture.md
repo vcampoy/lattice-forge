@@ -180,8 +180,8 @@ dotnet test LatticeForge.sln --no-build
 Run the current frontend build from `src/LatticeForge.Web`:
 
 ```powershell
-npm install
-npm run build
+pnpm install --frozen-lockfile
+pnpm build
 ```
 
 Frontend component tests are implemented in phase 02. They run in jsdom through Vitest and Testing Library, and currently protect major workspace regions, accessible names, and explicit empty analysis states.
@@ -192,7 +192,7 @@ The client presents a responsive industrial workspace with explicit page regions
 
 The shell uses semantic headings, labelled controls, live API status, visible focus rings, and responsive layouts down to 560px. Lucide icons are inline SVG components. The central viewport now uses React Three Fiber and procedural Three.js resources, with a CSS fallback when WebGL is unavailable.
 
-Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. `geometryParameters.test.ts` protects pure normalization before values reach Three.js. They run in jsdom through Vitest and Testing Library. `npm test`, `npm run build`, and `npm run lint` are the current frontend checks.
+Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. `geometryParameters.test.ts` protects pure normalization before values reach Three.js. They run in jsdom through Vitest and Testing Library. `pnpm test`, `pnpm build`, and `pnpm lint` are the current frontend checks.
 
 ## Three.js viewport (phase 03)
 
@@ -253,3 +253,7 @@ Phase 06 supersedes the earlier planned note that analysis was not connected: de
 `heatmapRisk.ts` derives a deterministic risk value from surface orientation, process threshold, wall thickness, and view geometry. `RiskHeatmap.tsx` renders the reusable color ramp and an explicit text/pattern warning representation. `BracketScene.tsx` reuses the scan plane and clipping resources while the sequence reveals the lattice and transitions into Compare mode.
 
 The scan is resize-safe because its plane is derived from the current bracket bounds. API failures do not fabricate optimized metrics: the visual sequence may complete, while the analysis panel retains its error state. Persistence, STL export, and engineering-grade validation remain planned.
+
+## Frontend package management
+
+The frontend is the repository's only JavaScript package and uses pnpm 10.33.1. Its lockfile lives at `src/LatticeForge.Web/pnpm-lock.yaml`; there is no root `package.json` and no `pnpm-workspace.yaml`. This keeps dependency resolution local to the web client without introducing workspace management overhead.

@@ -1,6 +1,6 @@
 # Implementation log
 
-This append-only log records what each build phase actually delivered. Planned work belongs in [the build prompts](../BUILD_PROMPTS.md), not in completed-phase entries.
+This append-only log records what each build phase actually delivered. Planned work belongs in [the build prompts](../prompts/BUILD_PROMPTS.md), not in completed-phase entries.
 
 ## Phase 00 — Full-stack foundation
 
@@ -270,3 +270,51 @@ Phase 05 makes the lightweighting story visible in one gesture and supports a be
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+
+## Frontend package-management migration - npm to pnpm
+
+**Status:** Implemented
+
+### Delivered
+
+- Pinned the frontend package manager to pnpm `10.33.1` in `src/LatticeForge.Web/package.json`.
+- Imported the tracked npm lockfile into `src/LatticeForge.Web/pnpm-lock.yaml`, then removed `package-lock.json` after successful generation.
+- Updated the frontend launcher and active setup/build/test documentation to use pnpm.
+- Added the local frontend package-management architecture note and recorded that the tooling change has no product, pricing, or manufacturing-model impact.
+- Kept the lockfile local to the only JavaScript package; no root package, workspace file, or CI configuration was introduced.
+
+### TDD evidence
+
+The required RED command was run before migration:
+
+```text
+pnpm install --frozen-lockfile
+```
+
+It failed as expected with `ERR_PNPM_NO_LOCKFILE Cannot install with "frozen-lockfile" because pnpm-lock.yaml is absent`.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| `pnpm install --frozen-lockfile` | Passed with pnpm `10.33.1`; lockfile unchanged and no npm lockfile recreated |
+| `pnpm test` | Passed - 10 files, 34 tests |
+| `pnpm build` | Passed; Vite emitted the existing non-blocking large-chunk advisory |
+| `pnpm lint` | Passed; existing `react(only-export-components)` warning remains in `src/geometry/BracketGeometry.tsx` |
+| `dotnet test LatticeForge.sln --no-restore` | Passed - 12 tests |
+| PowerShell parser validation | Passed for `scripts/start-backend.ps1` and `scripts/start-frontend.ps1` |
+| `git diff --check` | Passed |
+
+### Dependency-resolution note
+
+The pnpm lockfile preserves the existing resolved versions. `three-stdlib@2.36.1` is declared directly because the existing frontend imports its type from `BracketScene.tsx`; the same version was already present transitively in the npm lockfile.
+
+### Documentation changed
+
+- `README.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`
+- `docs/README.md`
+- `prompts/BUILD_PROMPTS.md`

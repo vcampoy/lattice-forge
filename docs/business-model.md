@@ -117,3 +117,7 @@ This strengthens the product hypothesis that a single visual workspace can conne
 The Optimize for Manufacturing action turns the analysis into a short, repeatable story: scan the part, reveal the conceptual lattice, expose deterministic overhang risk, and finish in a before/after comparison. A legend and non-colour warning representation keep the heatmap understandable and accessible.
 
 This strengthens the interview-demo hypothesis that a guided transition can communicate lightweighting tradeoffs faster than a static dashboard. It does not add a commercial optimization claim: the heatmap is deterministic and illustrative, API failures never fabricate metrics, and engineering validation remains outside scope.
+
+## Tooling impact
+
+The npm-to-pnpm frontend tooling migration has no product, pricing, or manufacturing-model impact. It changes dependency installation and reproducibility only; product scope and illustrative equations remain unchanged.

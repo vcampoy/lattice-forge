@@ -7,7 +7,7 @@ This documentation describes the product and the software that exist today. It i
 1. [Business model](business-model.md) — the problem, users, value, assumptions, and responsible product boundaries.
 2. [Technical architecture](technical-architecture.md) — the running system, contracts, calculations, validation, and test strategy.
 3. [Implementation log](implementation-log.md) — the evidence and decisions recorded after each build phase.
-4. [Build prompts](../BUILD_PROMPTS.md) — the phased implementation plan, including work not yet delivered.
+4. [Build prompts](../prompts/BUILD_PROMPTS.md) — the phased implementation plan, including work not yet delivered.
 
 ## Current status
 

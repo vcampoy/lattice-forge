@@ -51,7 +51,7 @@ src/
   LatticeForge.Web/
 tests/
   LatticeForge.Api.Tests/
-BUILD_PROMPTS.md
+prompts/BUILD_PROMPTS.md
 README.md
 LatticeForge.sln
 ```
@@ -60,7 +60,7 @@ LatticeForge.sln
 
 Every implementation prompt below assumes these rules:
 
-- Read `AGENTS.md` and `BUILD_PROMPTS.md` before editing.
+- Read `AGENTS.md` and `prompts/BUILD_PROMPTS.md` before editing.
 - Inspect the current repository state and preserve completed work.
 - Implement only the requested phase.
 - Prefer the smallest maintainable design; do not introduce speculative abstractions.
@@ -111,7 +111,7 @@ Mandatory user rules for this phase:
 
 Implement phase 00 of Lattice Forge: create the smallest runnable full-stack foundation.
 
-Before editing, read AGENTS.md and BUILD_PROMPTS.md and inspect the repository and installed tool versions. The directory may be empty and may not yet be a Git repository.
+Before editing, read AGENTS.md and prompts/BUILD_PROMPTS.md and inspect the repository and installed tool versions. The directory may be empty and may not yet be a Git repository.
 
 Scope:
 - Initialize Git if needed and add an appropriate .gitignore and .editorconfig.
@@ -130,8 +130,8 @@ Do not add Three.js, database persistence, or manufacturing logic yet.
 Acceptance criteria:
 - dotnet build LatticeForge.sln succeeds.
 - dotnet test LatticeForge.sln succeeds.
-- npm install succeeds in src/LatticeForge.Web.
-- npm run build succeeds in src/LatticeForge.Web.
+- pnpm install --frozen-lockfile succeeds in src/LatticeForge.Web.
+- pnpm build succeeds in src/LatticeForge.Web.
 - The frontend can call /api/health through the Vite proxy without enabling broad production CORS.
 
 Run every verification command. Fix failures before finishing. Suggest, but do not create, the conventional commit: chore: scaffold lattice forge full-stack workspace
@@ -149,7 +149,7 @@ Mandatory user rules for this phase:
 
 Implement phase 01 of Lattice Forge: a tested, server-side manufacturing analysis vertical slice.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve phase 00. Work only in the API and backend test projects except for generated API documentation if needed.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve phase 00. Work only in the API and backend test projects except for generated API documentation if needed.
 
 Create a compact domain model for:
 - BracketParameters: length, height, depth, wallThickness, holeRadius, latticeDensity.
@@ -197,7 +197,7 @@ Mandatory user rules for this phase:
 
 Implement phase 02 of Lattice Forge: the polished application shell and design system, without the 3D scene.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve backend behaviour.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve backend behaviour.
 
 Frontend scope:
 - Install only the dependencies needed for React UI state and icons. Use Zustand and Lucide React.
@@ -217,7 +217,7 @@ Frontend scope:
 Use realistic placeholder labels but do not implement form behaviour or fabricated analysis numbers yet. Empty metric states should use an em dash or “Awaiting analysis”.
 
 Acceptance criteria:
-- npm run build succeeds.
+- pnpm build succeeds.
 - Add and run frontend component tests for the main regions and accessible names.
 - There is no horizontal page scroll at desktop width.
 - No external runtime image, font, or stylesheet is required.
@@ -237,7 +237,7 @@ Mandatory user rules for this phase:
 
 Implement phase 03 of Lattice Forge: a production-quality Three.js viewport containing a parametric mechanical bracket.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve the existing shell.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve the existing shell.
 
 Install Three.js, @react-three/fiber, and @react-three/drei. Avoid additional 3D dependencies unless technically necessary.
 
@@ -258,7 +258,7 @@ Performance constraints:
 - Cap device pixel ratio to a sensible value.
 
 Acceptance criteria:
-- npm run build succeeds with no TypeScript errors.
+- pnpm build succeeds with no TypeScript errors.
 - Existing frontend tests pass.
 - Add focused unit tests for pure geometry-parameter normalization utilities.
 - The bracket remains framed when the viewport resizes.
@@ -278,7 +278,7 @@ Mandatory user rules for this phase:
 
 Implement phase 04 of Lattice Forge: typed parametric controls connected to the Three.js bracket.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve the scene and backend.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve the scene and backend.
 
 Create a small Zustand design store containing:
 - length, height, depth, wallThickness, holeRadius, and latticeDensity,
@@ -302,7 +302,7 @@ Acceptance criteria:
 - The visible bracket changes for length, height, depth, wall thickness, and hole radius.
 - Controls are keyboard operable and have accessible names and current values.
 - Store and control tests cover preset, reset, clamping, and process/material compatibility.
-- npm run test and npm run build succeed.
+- pnpm test and pnpm build succeed.
 
 Run verification and fix failures. Suggest, but do not create, the conventional commit: feat(web): connect parametric design controls
 ```
@@ -319,7 +319,7 @@ Mandatory user rules for this phase:
 
 Implement phase 05 of Lattice Forge: the visual lightweighting concept using an efficient procedural lattice.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve current controls and geometry.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve current controls and geometry.
 
 Implement a LatticeStructure component that:
 - Creates a mechanically plausible repeated diagonal or octet-style pattern inside the bracket bounds.
@@ -341,7 +341,7 @@ Performance acceptance criteria:
 - Lattice density has a documented hard maximum.
 - No unbounded object creation occurs during dragging.
 - Camera interaction stays responsive at maximum supported density.
-- npm run test and npm run build succeed.
+- pnpm test and pnpm build succeed.
 
 Add tests for lattice count calculation, bounds, and view-mode state. Run verification and fix failures. Suggest, but do not create, the conventional commit: feat(web): add lattice optimization comparison
 ```
@@ -358,7 +358,7 @@ Mandatory user rules for this phase:
 
 Implement phase 06 of Lattice Forge: connect the frontend design to the ASP.NET Core manufacturing-analysis API.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve all current behaviour.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve all current behaviour.
 
 Implement:
 - A small typed API client with explicit request and response types.
@@ -384,7 +384,7 @@ Acceptance criteria:
 - API errors never crash or blank the Three.js viewport.
 - Frontend tests cover debounce/cancellation, success, validation failure, and retry.
 - dotnet test LatticeForge.sln succeeds.
-- npm run test and npm run build succeed.
+- pnpm test and pnpm build succeed.
 
 Run all verification and fix failures. Suggest, but do not create, the conventional commit: feat(web): display live manufacturing analysis
 ```
@@ -401,7 +401,7 @@ Mandatory user rules for this phase:
 
 Implement phase 07 of Lattice Forge: the signature “Optimize for Manufacturing” cinematic interaction.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve application correctness and accessibility.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve application correctness and accessibility.
 
 Add a primary Optimize for Manufacturing action. On activation, run one controlled 2.5–3.5 second sequence:
 1. Lock only conflicting view controls, not the whole UI.
@@ -426,7 +426,7 @@ Acceptance criteria:
 - Repeated runs produce the same result and no resource leak.
 - The scan stays aligned after resize.
 - Controls recover after completion, cancellation, or error.
-- npm run test and npm run build succeed.
+- pnpm test and pnpm build succeed.
 
 Add focused tests for the animation state machine and reduced-motion path. Run verification and fix failures. Suggest, but do not create, the conventional commit: feat(web): add manufacturing optimization scan
 ```
@@ -443,7 +443,7 @@ Mandatory user rules for this phase:
 
 Implement phase 08 of Lattice Forge: lightweight persistence and export.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Preserve all existing behaviour.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Preserve all existing behaviour.
 
 Backend:
 - Add EF Core with SQLite.
@@ -467,7 +467,7 @@ Acceptance criteria:
 - Invalid persisted or posted values are rejected safely.
 - Save/load/export do not reset the camera unexpectedly.
 - dotnet test LatticeForge.sln succeeds.
-- npm run test and npm run build succeeds.
+- pnpm test and pnpm build succeeds.
 
 Run verification and fix failures. Suggest, but do not create, the conventional commit: feat: persist and export lattice designs
 ```
@@ -484,7 +484,7 @@ Mandatory user rules for this phase:
 
 Implement phase 09 of Lattice Forge: production-style hardening without adding product features.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Audit the current implementation before editing.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Audit the current implementation before editing.
 
 Focus only on:
 - Responsive layouts for 1440x900, 1280x720, 1024x768, and a narrow 390px fallback.
@@ -502,7 +502,7 @@ Run a dependency audit and resolve only directly actionable issues that do not f
 
 Acceptance criteria:
 - dotnet build and dotnet test succeed.
-- npm run test and npm run build succeed.
+- pnpm test and pnpm build succeed.
 - No console error appears during the primary flow.
 - The main flow is usable with keyboard only outside raw 3D orbit interaction.
 - Document remaining browser, accessibility, and performance limitations.
@@ -522,7 +522,7 @@ Mandatory user rules for this phase:
 
 Implement phase 10 of Lattice Forge: make the repository and demo interview-ready. Do not add new product capabilities.
 
-Read AGENTS.md and BUILD_PROMPTS.md first. Inspect the complete application.
+Read AGENTS.md and prompts/BUILD_PROMPTS.md first. Inspect the complete application.
 
 Update README.md so a reviewer can understand the project in under three minutes. Include:
 - one-sentence product pitch,
@@ -563,7 +563,7 @@ Mandatory user rules for this phase:
 
 Perform a fresh-context release review of the Lattice Forge repository. This is an adversarial review followed by targeted repair, not a redesign.
 
-Read AGENTS.md, BUILD_PROMPTS.md, README.md, and docs/INTERVIEW_SCRIPT.md. Inspect the full diff and implementation.
+Read AGENTS.md, prompts/BUILD_PROMPTS.md, README.md, and docs/INTERVIEW_SCRIPT.md. Inspect the full diff and implementation.
 
 Review for:
 - broken startup or incorrect commands,
@@ -586,8 +586,8 @@ Classify findings as Critical, Warning, or Suggestion. Fix every confirmed Criti
 Then run:
 - dotnet build LatticeForge.sln
 - dotnet test LatticeForge.sln
-- npm run test in src/LatticeForge.Web
-- npm run build in src/LatticeForge.Web
+- pnpm test in src/LatticeForge.Web
+- pnpm build in src/LatticeForge.Web
 
 Finish with:
 1. findings and evidence,

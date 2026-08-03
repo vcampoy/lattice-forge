@@ -1,6 +1,7 @@
 {
   "name": "latticeforge-web",
   "private": true,
+  "packageManager": "pnpm@10.33.1",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -29,6 +30,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^29.1.1",
     "oxlint": "^1.75.0",
+    "three-stdlib": "^2.36.1",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"
