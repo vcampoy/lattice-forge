@@ -1,6 +1,6 @@
 # Business model
 
-Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype now combines a deterministic analysis API with a procedural, inspectable Three.js bracket viewport; manufacturing optimization and analysis integration remain planned.
+Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype now combines a deterministic analysis API, a procedural Three.js bracket viewport, and live parametric design controls; manufacturing optimization and analysis integration remain planned.
 
 ## Problem
 
@@ -36,9 +36,9 @@ Today, the implemented value is narrower:
 - early warnings for minimum wall thickness; and
 - an API boundary that can support a future visual workflow.
 
-### Phase 02-03 experience signal
+### Phase 02-04 experience signal
 
-The workspace now makes the intended product narrative visible in one screen: geometry controls on the left, an interactive mechanical bracket viewport in the centre, and manufacturing outcomes on the right. A WebGL fallback preserves the surrounding workflow on unsupported browsers. Empty metrics intentionally remain pending, so the interface communicates the future workflow without presenting fabricated results. This improves early design comprehension but does not change pricing assumptions.
+The workspace now makes the intended product narrative visible in one screen: geometry controls on the left, an interactive mechanical bracket viewport in the centre, and manufacturing outcomes on the right. A WebGL fallback preserves the surrounding workflow on unsupported browsers. Empty metrics intentionally remain pending, while live dimension changes make the design-to-manufacturing conversation tangible without presenting fabricated results. This improves early design comprehension but does not change pricing assumptions.
 
 ## Primary workflow
 
@@ -51,7 +51,7 @@ The intended workflow is:
 5. Review warnings and the illustrative-estimate disclaimer.
 6. Save or export the concept for further work.
 
-**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, and an interactive default parametric bracket viewport with orbit/reset controls. Steps 2?6 remain incomplete as a product workflow: controls are not yet connected to geometry, and analysis, lattice reveal, persistence, and export are not integrated.
+**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, an interactive parametric bracket viewport with orbit/reset controls, live dimension controls, presets, and process/material compatibility filtering. Analysis, lattice reveal, persistence, and export are not integrated.
 
 ## Business assumptions
 
@@ -61,7 +61,7 @@ The intended workflow is:
 - Material and process compatibility should constrain the workflow before analysis.
 - Trust increases when model assumptions and units are visible rather than hidden behind a score.
 
-These assumptions require user and domain-expert validation before commercial use.
+The phase 04 interaction adds a testable assumption that immediate, bounded geometry feedback improves early design conversations; this still requires user and domain-expert validation before commercial use.
 
 ## Illustrative metrics
 

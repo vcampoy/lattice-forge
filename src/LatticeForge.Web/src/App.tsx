@@ -13,10 +13,11 @@ import {
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Waypoints,
 } from 'lucide-react'
 import { useWorkspaceStore, type ViewMode } from './useWorkspaceStore'
+import { DesignControls } from './DesignControls'
+import { useDesignStore, type MaterialOption } from './useDesignStore'
 import { ThreeViewport } from './geometry/ThreeViewport'
 import './App.css'
 
@@ -27,6 +28,12 @@ type HealthResponse = {
   service: string
 }
 
+const FALLBACK_MATERIALS: readonly MaterialOption[] = [
+  { id: 'aluminum-sls', name: 'Aluminium PA', process: 'Sls' },
+  { id: 'resin-sla', name: 'Clear Resin', process: 'Sla' },
+  { id: 'titanium-lpbf', name: 'Titanium Ti-6Al-4V', process: 'MetalLpbf' },
+]
+
 const viewModes: Array<{ id: ViewMode; label: string; icon: typeof Orbit }> = [
   { id: 'orbit', label: 'Orbit', icon: Orbit },
   { id: 'front', label: 'Front', icon: Cuboid },
@@ -36,6 +43,8 @@ const viewModes: Array<{ id: ViewMode; label: string; icon: typeof Orbit }> = [
 function App() {
   const [healthState, setHealthState] = useState<HealthState>('checking')
   const { viewMode, showGrid, setViewMode, toggleGrid } = useWorkspaceStore()
+  const design = useDesignStore()
+  const [materials, setMaterials] = useState<readonly MaterialOption[]>(FALLBACK_MATERIALS)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -59,6 +68,25 @@ function App() {
     }
 
     void loadHealth()
+
+    const loadMaterials = async (): Promise<void> => {
+      try {
+        const response = await fetch('/api/materials', { signal: controller.signal })
+        if (!response.ok) return
+        const payload: unknown = await response.json()
+        if (!Array.isArray(payload)) return
+        const parsed = payload.filter((item): item is MaterialOption => {
+          if (!item || typeof item !== 'object') return false
+          const candidate = item as Partial<MaterialOption>
+          return typeof candidate.id === 'string' && ['Sls', 'Sla', 'MetalLpbf'].includes(candidate.process as string)
+        })
+        if (parsed.length > 0) setMaterials(parsed)
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+      }
+    }
+
+    void loadMaterials()
     return () => controller.abort()
   }, [])
 
@@ -93,48 +121,11 @@ function App() {
       <div className="workspace-grid">
         <aside className="panel design-panel" aria-labelledby="design-controls-title">
           <PanelHeader icon={<SlidersHorizontal size={16} />} eyebrow="Geometry" title="Design Controls" />
-          <div className="panel-content">
-            <div className="control-group">
-              <div className="control-label-row"><label htmlFor="length">Overall length</label><output>120 <span>mm</span></output></div>
-              <input id="length" type="range" min="60" max="180" defaultValue="120" aria-label="Overall length" />
-            </div>
-            <div className="control-group">
-              <div className="control-label-row"><label htmlFor="height">Overall height</label><output>80 <span>mm</span></output></div>
-              <input id="height" type="range" min="40" max="140" defaultValue="80" aria-label="Overall height" />
-            </div>
-            <div className="control-group">
-              <div className="control-label-row"><label htmlFor="depth">Depth</label><output>40 <span>mm</span></output></div>
-              <input id="depth" type="range" min="20" max="80" defaultValue="40" aria-label="Depth" />
-            </div>
-          </div>
-          <div className="panel-divider" />
-          <div className="panel-content">
-            <div className="section-heading"><span>Lightweighting</span><span className="section-index">02</span></div>
-            <div className="control-group">
-              <div className="control-label-row"><label htmlFor="lattice-density">Lattice density</label><output>50 <span>%</span></output></div>
-              <input id="lattice-density" type="range" min="0" max="100" defaultValue="50" aria-label="Lattice density" />
-            </div>
-            <div className="control-group">
-              <div className="control-label-row"><label htmlFor="wall-thickness">Wall thickness</label><output>4.0 <span>mm</span></output></div>
-              <input id="wall-thickness" type="range" min="1" max="8" step="0.5" defaultValue="4" aria-label="Wall thickness" />
-            </div>
-            <div className="control-note"><ShieldCheck size={14} /><span>All dimensions remain within the current design envelope.</span></div>
-          </div>
-          <div className="panel-divider" />
-          <div className="panel-content material-selection">
-            <div className="section-heading"><span>Material &amp; process</span><span className="section-index">03</span></div>
-            <label htmlFor="material">Material</label>
-            <select id="material" defaultValue="aluminum-sls" aria-label="Material">
-              <option value="aluminum-sls">Aluminum · SLS</option>
-              <option value="resin-sla">High-temp resin · SLA</option>
-              <option value="titanium-lpbf">Titanium · LPBF</option>
-            </select>
-            <button className="primary-button" type="button"><Sparkles size={15} /> Optimize design</button>
-          </div>
+          <DesignControls materials={materials} />
         </aside>
 
         <section className="viewport-region" aria-label="3D design viewport" role="region">
-          <Viewport showGrid={showGrid} viewMode={viewMode} />
+          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} />
         </section>
 
         <aside className="panel analysis-panel" aria-labelledby="analysis-title">
@@ -143,13 +134,13 @@ function App() {
             <div className="analysis-state"><span className="state-dot" /> <span>Awaiting analysis</span></div>
             <p className="analysis-intro">Run optimization to reveal how this design performs in its selected process.</p>
             <div className="metric-grid">
-              <Metric label="Estimated weight" value="—" unit="g" />
-              <Metric label="Material usage" value="—" unit="%" />
-              <Metric label="Printability" value="—" unit="/100" />
-              <Metric label="Estimated cost" value="—" unit="EUR" />
+              <Metric label="Estimated weight" value="-" unit="g" />
+              <Metric label="Material usage" value="-" unit="%" />
+              <Metric label="Printability" value="-" unit="/100" />
+              <Metric label="Estimated cost" value="-" unit="EUR" />
             </div>
             <div className="analysis-card warning-card"><div className="card-heading"><ShieldCheck size={14} /> <span>Manufacturing readiness</span></div><strong>Pending geometry</strong><p>Illustrative estimates only. Validate in a qualified workflow before production.</p></div>
-            <div className="analysis-card"><div className="card-heading"><Ruler size={14} /> <span>Design envelope</span></div><div className="envelope-row"><span>Wall thickness</span><span>4.0 mm</span></div><div className="envelope-row"><span>Support risk</span><span className="muted-value">—</span></div></div>
+            <div className="analysis-card"><div className="card-heading"><Ruler size={14} /> <span>Design envelope</span></div><div className="envelope-row"><span>Wall thickness</span><span>4.0 mm</span></div><div className="envelope-row"><span>Support risk</span><span className="muted-value">â€”</span></div></div>
           </div>
         </aside>
       </div>
@@ -174,8 +165,8 @@ function Metric({ label, value, unit }: { label: string; value: string; unit: st
   return <div className="metric"><span>{label}</span><strong>{value}<small>{unit}</small></strong></div>
 }
 
-function Viewport({ showGrid, viewMode }: { showGrid: boolean; viewMode: ViewMode }) {
-  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} />
+function Viewport({ showGrid, viewMode, parameters }: { showGrid: boolean; viewMode: ViewMode; parameters: { length: number; height: number; depth: number; wallThickness: number; holeRadius: number } }) {
+  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} parameters={parameters} />
 }
 
 export default App

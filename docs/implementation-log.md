@@ -130,3 +130,43 @@ Phase 04 will connect shared design controls to the Three.js scene and preserve 
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+## Phase 04 — Live parametric design controls
+
+**Status:** Implemented
+
+### Phase 04 delivered
+
+- Added typed Zustand design state for five bracket dimensions, lattice density, process/material selection, camera/design view state, active preset, reset, clamping, and modified detection.
+- Added Lightweight, Balanced, and Reinforced presets plus Reset Design.
+- Replaced presentational controls with accessible paired range/numeric inputs, explicit mm/% units, safe bounds, dynamic wall/hole limits, and keyboard-operable native controls.
+- Loaded material profiles from `GET /api/materials`; incompatible material options are excluded when process changes and a compatible catalogue entry is selected.
+- Passed normalized design parameters through `ThreeViewport` and `BracketScene` to procedural `BracketGeometry`; length, height, depth, wall thickness, and hole radius update live while dragging.
+- Added dimensions overlay and Modified/Balanced status indicator. API analysis requests, lattice, persistence, export, and optimization animation remain out of scope.
+
+### Phase 04 verification
+
+| Command | Result |
+|---|---|
+| `npm test` in `src/LatticeForge.Web` | Passed — 13 tests |
+| `npm run build` in `src/LatticeForge.Web` | Passed (Vite emitted a non-blocking large-chunk advisory) |
+| `npm run lint` in `src/LatticeForge.Web` | Passed |
+| `dotnet test LatticeForge.sln --no-restore` | Environment blocked test DLL loading with Windows Application Control (`0x800711C7`); not a product failure and not claimed as passed |
+
+### Phase 04 decisions and tradeoffs
+
+- Kept local design state separate from the API analysis contract so dragging stays responsive and phase 05 can add lattice/analysis without rewriting the rendering boundary.
+- Used native range/number/select controls for reliable keyboard and screen-reader behaviour instead of a custom slider abstraction.
+- Used a deterministic fallback material catalogue only when the materials request is unavailable; successful API data always replaces it.
+- Followed Red–Green–Refactor: store and control tests were added and observed failing before implementation, then the focused and full frontend suites returned to green.
+
+### Business impact
+
+Phase 04 turns the prototype from a static viewport into an explorable design conversation: stakeholders can change bounded dimensions and see the bracket respond immediately, while process/material compatibility prevents an obviously invalid pairing. This improves demo value but does not add engineering-grade analysis or commercial claims.
+
+### Documentation changed
+
+- `docs/README.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`

@@ -202,20 +202,28 @@ The scene scale is **1 world unit = 1 millimetre**. `normalizeBracketParameters`
 
 Geometry and material instances are memoized by geometry parameters and disposed on replacement or unmount. No render-loop allocations are introduced. The Canvas caps device pixel ratio at 1.75 and uses only local procedural lighting; no HDR or remote runtime asset is required. A narrow or unavailable WebGL context leaves the surrounding design and analysis panels usable.
 
+
+## Parametric design controls (phase 04)
+
+`useDesignStore.ts` is the single browser-side source of truth for normalized length, height, depth, wall thickness, hole radius, lattice density, process, material, and view selections. `normalizeBracketParameters` clamps geometry before it reaches Three.js; lattice density is clamped to 0–100%. Three named presets (Lightweight, Balanced, Reinforced) and Reset Design update the same state and expose a modified indicator relative to the active preset.
+
+`DesignControls.tsx` renders paired range and numeric inputs with explicit units, bounded steps, keyboard-operable native controls, and accessible labels/current values. Materials are loaded from `GET /api/materials`; the material select is filtered to the selected process and changing process chooses its compatible catalogue entry. If the API is unavailable, a small deterministic demo catalogue keeps the shell usable without pretending that analysis succeeded.
+
+`ThreeViewport` passes the current normalized dimensions through `BracketScene` to `BracketGeometry`, so all five geometric dimensions update the visible bracket while dragging. The viewport dimensions label is derived from the same state. API analysis requests, lattice rendering, persistence, and export remain intentionally out of scope.
+
 ## Current constraints
 
 - The catalogue is compiled into the API; there is no administrative or persistence layer.
 - The analysis service uses heuristic equations, not finite-element, thermal, slicing, support-generation, or machine-specific simulation.
 - Validation exceptions are translated at the HTTP boundary; there is no richer domain error model yet.
 - Authentication, authorization, observability, rate limiting, and production deployment are outside the demo's current scope.
-- The web client calls only the health endpoint today. Material and analysis endpoints are not yet connected to the UI.
-- Design controls are presentational through phase 03; they do not yet drive analysis or geometry.
+- The web client calls health and materials endpoints; analysis requests are not yet connected to the UI.
+- Design controls drive the local Three.js geometry; they do not yet drive API analysis.
 
 ## Planned, not implemented
 
 The following capabilities appear in the build plan but **do not exist in the current application**:
 
-- live parametric controls and shared geometry state;
 - lattice reveal, comparison mode, or heatmap;
 - live manufacturing-analysis integration in the UI;
 - optimization animation;

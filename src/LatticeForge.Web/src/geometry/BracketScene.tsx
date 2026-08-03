@@ -3,48 +3,39 @@ import { useEffect, useRef } from 'react'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { Vector3, type PerspectiveCamera as PerspectiveCameraType } from 'three'
 import { BracketGeometry } from './BracketGeometry'
-import { DEFAULT_BRACKET_GEOMETRY, type BracketGeometryParameters } from './geometryParameters'
-
+import type { BracketGeometryParameters } from './geometryParameters'
 type BracketSceneProps = {
   showGrid: boolean
   viewMode: 'orbit' | 'front' | 'section'
+  parameters: BracketGeometryParameters
   onResetReady?: (reset: () => void) => void
 }
-
 const CAMERA_POSITIONS: Record<BracketSceneProps['viewMode'], [number, number, number]> = {
   orbit: [150, 108, 178],
   front: [0, 0, 235],
   section: [166, 62, 162],
 }
-
-export function BracketScene({ showGrid, viewMode, onResetReady }: BracketSceneProps) {
+export function BracketScene({ showGrid, viewMode, parameters, onResetReady }: BracketSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
   const cameraRef = useRef<PerspectiveCameraType | null>(null)
-
   useEffect(() => {
     const controls = controlsRef.current
     const camera = cameraRef.current
     if (!controls || !camera) return
-
     camera.position.copy(new Vector3(...CAMERA_POSITIONS[viewMode]))
     controls.target.set(0, 0, 0)
     controls.update()
   }, [viewMode])
-
   useEffect(() => {
     onResetReady?.(() => {
       const controls = controlsRef.current
       const camera = cameraRef.current
       if (!controls || !camera) return
-
       camera.position.copy(new Vector3(...CAMERA_POSITIONS.orbit))
       controls.target.set(0, 0, 0)
       controls.update()
     })
   }, [onResetReady])
-
-  const parameters: BracketGeometryParameters = DEFAULT_BRACKET_GEOMETRY
-
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={42} near={0.1} far={1000} position={CAMERA_POSITIONS.orbit} />
