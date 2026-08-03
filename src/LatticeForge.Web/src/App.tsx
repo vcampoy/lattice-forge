@@ -18,6 +18,7 @@ import { ManufacturingAnalysisPanel } from './ManufacturingAnalysisPanel'
 import { ThreeViewport } from './geometry/ThreeViewport'
 import { useDesignStore, type MaterialOption } from './useDesignStore'
 import { useManufacturingAnalysis } from './useManufacturingAnalysis'
+import { useOptimizationSequence } from './useOptimizationSequence'
 import { useWorkspaceStore, type ViewMode } from './useWorkspaceStore'
 import './App.css'
 
@@ -69,6 +70,7 @@ function App() {
     design.wallThickness,
   ])
   const analysis = useManufacturingAnalysis(analysisQuery)
+  const optimization = useOptimizationSequence({ designSignature: JSON.stringify(analysisQuery), onComplete: () => design.setDesignViewMode('compare') })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -151,12 +153,12 @@ function App() {
         </aside>
 
         <section className="viewport-region" aria-label="3D design viewport" role="region">
-          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} designViewMode={design.designViewMode} />
+          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} process={design.selectedProcess} designViewMode={design.designViewMode} optimizationFrame={optimization.frame} />
         </section>
 
         <aside className="panel analysis-panel" aria-labelledby="analysis-title">
           <PanelHeader icon={<Waypoints size={16} />} eyebrow="Simulation" title="Manufacturing Analysis" />
-          <ManufacturingAnalysisPanel {...analysis} />
+          <ManufacturingAnalysisPanel {...analysis} onOptimize={optimization.start} onSkip={optimization.skip} optimizationPhase={optimization.phase} optimizationRunning={optimization.isRunning} optimizationHasRun={optimization.hasRun} metricsProgress={optimization.frame.metricsProgress} />
         </aside>
       </div>
 
@@ -204,8 +206,8 @@ function PanelHeader({ icon, eyebrow, title }: { icon: ReactNode; eyebrow: strin
   )
 }
 
-function Viewport({ showGrid, viewMode, parameters, designViewMode }: { showGrid: boolean; viewMode: ViewMode; parameters: { length: number; height: number; depth: number; wallThickness: number; holeRadius: number; latticeDensity: number }; designViewMode: 'solid' | 'optimized' | 'compare' }) {
-  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} />
+function Viewport({ showGrid, viewMode, parameters, process, designViewMode, optimizationFrame }: { showGrid: boolean; viewMode: ViewMode; parameters: { length: number; height: number; depth: number; wallThickness: number; holeRadius: number; latticeDensity: number }; process: 'Sls' | 'Sla' | 'MetalLpbf'; designViewMode: 'solid' | 'optimized' | 'compare'; optimizationFrame: import('./optimizationSequence').OptimizationFrame }) {
+  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} parameters={parameters} process={process} designViewMode={designViewMode} optimizationFrame={optimizationFrame} />
 }
 
 export default App

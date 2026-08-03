@@ -242,3 +242,31 @@ Phase 05 makes the lightweighting story visible in one gesture and supports a be
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+## Phase 07 ? Signature optimization scan
+
+**Status:** Implemented
+
+### Delivered
+
+- Added the Optimize for Manufacturing action with a bounded cinematic scan, lattice reveal, deterministic risk heatmap, and Compare-mode finish.
+- Added a presentation-only optimization state machine with overlap protection, Skip Animation, cancellation, resize-safe scan alignment, and reduced-motion handling.
+- Added deterministic heatmap risk calculation derived from surface orientation and process thresholds, plus a legend and non-colour warning representation.
+- Kept API metrics authoritative: visual completion does not invent optimized values when analysis fails.
+- Added first-run guidance and preserved independent design controls and viewport usability.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| `npm test` in `src/LatticeForge.Web` | Passed - 10 files, 34 tests |
+| `npm run build` in `src/LatticeForge.Web` | Passed (Vite emitted a non-blocking large-chunk advisory) |
+| `npm run lint` in `src/LatticeForge.Web` | Passed (existing fast-refresh warning only) |
+| `dotnet test LatticeForge.sln --no-restore` | Passed ? 12 tests |
+
+### Documentation changed
+
+- `docs/README.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`

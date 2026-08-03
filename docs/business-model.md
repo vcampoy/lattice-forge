@@ -111,3 +111,9 @@ No pricing model, commercial packaging, production tenancy, or revenue forecast 
 The right panel now consumes the real ASP.NET Core analysis contract as users adjust geometry, material, or process. Debouncing protects the API during slider movement; cancellation ensures the visible result always belongs to the current design. Success, validation, unavailable, and retry states make the workflow trustworthy instead of hiding failures.
 
 This strengthens the product hypothesis that a single visual workspace can connect a design choice to understandable manufacturing tradeoffs. The API values remain explicitly illustrative and are not positioned as quotes, certification, or Materialise functionality. The compact Solid-versus-Optimized comparison and suggested corrections improve the conversation with a designer, while persistence, export, and production validation remain outside the current scope.
+
+## Phase 07 ? Optimization scan experience
+
+The Optimize for Manufacturing action turns the analysis into a short, repeatable story: scan the part, reveal the conceptual lattice, expose deterministic overhang risk, and finish in a before/after comparison. A legend and non-colour warning representation keep the heatmap understandable and accessible.
+
+This strengthens the interview-demo hypothesis that a guided transition can communicate lightweighting tradeoffs faster than a static dashboard. It does not add a commercial optimization claim: the heatmap is deterministic and illustrative, API failures never fabricate metrics, and engineering validation remains outside scope.

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ManufacturingAnalysisPanel } from './ManufacturingAnalysisPanel'
 
 const result = {
@@ -29,5 +29,19 @@ describe('ManufacturingAnalysisPanel', () => {
     render(<ManufacturingAnalysisPanel status="unavailable" data={null} error="The manufacturing API is unavailable." retry={() => undefined} />)
     expect(screen.getByRole('button', { name: /retry analysis/i })).toBeInTheDocument()
     expect(screen.getAllByText(/unavailable/i).length).toBeGreaterThan(0)
+  })
+
+  it('offers the primary optimization action and skip control while running', () => {
+    const onOptimize = vi.fn()
+    const onSkip = vi.fn()
+    const view = render(<ManufacturingAnalysisPanel status="success" data={result} error={null} retry={() => undefined} onOptimize={onOptimize} onSkip={onSkip} optimizationPhase="idle" optimizationHasRun={false} />)
+    expect(screen.getByRole('button', { name: /optimize for manufacturing/i })).toBeInTheDocument()
+    expect(screen.getByText(/sweep the design/i)).toBeInTheDocument()
+    screen.getByRole('button', { name: /optimize for manufacturing/i }).click()
+    expect(onOptimize).toHaveBeenCalledOnce()
+
+    view.rerender(<ManufacturingAnalysisPanel status="success" data={result} error={null} retry={() => undefined} onOptimize={onOptimize} onSkip={onSkip} optimizationPhase="heatmap" optimizationRunning optimizationHasRun />)
+    screen.getByRole('button', { name: /skip animation/i }).click()
+    expect(onSkip).toHaveBeenCalledOnce()
   })
 })

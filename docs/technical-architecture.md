@@ -222,16 +222,16 @@ Geometry and material instances are memoized by geometry parameters and disposed
 - The analysis service uses heuristic equations, not finite-element, thermal, slicing, support-generation, or machine-specific simulation.
 - Validation exceptions are translated at the HTTP boundary; there is no richer domain error model yet.
 - Authentication, authorization, observability, rate limiting, and production deployment are outside the demo's current scope.
-- The web client calls health and materials endpoints; analysis requests are not yet connected to the UI.
-- Design controls drive the local Three.js geometry; they do not yet drive API analysis.
+- The web client calls health, materials, and analysis endpoints; analysis results remain illustrative.
+- Design controls drive the local Three.js geometry and debounced API analysis.
 
 ## Planned, not implemented
 
 The following capabilities appear in the build plan but **do not exist in the current application**:
 
-- optimization scan and risk heatmap;
-- live manufacturing-analysis integration in the UI;
-- optimization animation;
+- persistence and STL export;
+- engineering-grade manufacturing validation;
+- production deployment and observability;
 - SQLite persistence and STL export;
 - broader frontend interaction and end-to-end coverage; and
 - production deployment or engineering-grade manufacturing validation.
@@ -245,3 +245,11 @@ The following capabilities appear in the build plan but **do not exist in the cu
 Frontend tests cover debounce and cancellation, success, validation failure, unavailable/retry, and panel rendering. The 3D viewport remains independent: API failures update only the analysis panel and never unmount or replace the Three.js scene.
 
 Phase 06 supersedes the earlier planned note that analysis was not connected: design controls now drive both local geometry and debounced API analysis, while the API remains authoritative for all manufacturing equations. Optimization animation, persistence, export, and engineering-grade validation remain planned.
+
+## Optimization scan and risk heatmap (phase 07)
+
+`optimizationSequence.ts` defines the presentation-only state machine for the controlled Optimize for Manufacturing sequence. `useOptimizationSequence.ts` owns cancellation, skip, reduced-motion completion, and the single-run guard; it never mutates domain design state.
+
+`heatmapRisk.ts` derives a deterministic risk value from surface orientation, process threshold, wall thickness, and view geometry. `RiskHeatmap.tsx` renders the reusable color ramp and an explicit text/pattern warning representation. `BracketScene.tsx` reuses the scan plane and clipping resources while the sequence reveals the lattice and transitions into Compare mode.
+
+The scan is resize-safe because its plane is derived from the current bracket bounds. API failures do not fabricate optimized metrics: the visual sequence may complete, while the analysis panel retains its error state. Persistence, STL export, and engineering-grade validation remain planned.

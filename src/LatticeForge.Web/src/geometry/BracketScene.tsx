@@ -5,12 +5,17 @@ import { DoubleSide, Plane, Vector3, type PerspectiveCamera as PerspectiveCamera
 import { BracketGeometry } from './BracketGeometry'
 import type { BracketGeometryParameters } from './geometryParameters'
 import { LatticeStructure } from './LatticeStructureView'
+import { RiskHeatmap } from './RiskHeatmap'
 import type { DesignViewMode } from '../useDesignStore'
+import type { ManufacturingProcess } from '../useDesignStore'
+import type { OptimizationFrame } from '../optimizationSequence'
 type BracketSceneProps = {
   showGrid: boolean
   viewMode: 'orbit' | 'front' | 'section'
   parameters: BracketGeometryParameters & { latticeDensity: number }
   designViewMode: DesignViewMode
+  process: ManufacturingProcess
+  optimizationFrame?: OptimizationFrame
   splitPosition: number
   onResetReady?: (reset: () => void) => void
 }
@@ -19,12 +24,17 @@ const CAMERA_POSITIONS: Record<BracketSceneProps['viewMode'], [number, number, n
   front: [0, 0, 235],
   section: [166, 62, 162],
 }
-export function BracketScene({ showGrid, viewMode, parameters, designViewMode, splitPosition, onResetReady }: BracketSceneProps) {
+export function BracketScene({ showGrid, viewMode, parameters, designViewMode, splitPosition, onResetReady, process, optimizationFrame }: BracketSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
   const cameraRef = useRef<PerspectiveCameraType | null>(null)
+  const optimizationClipPlaneRef = useRef(new Plane(new Vector3(-1, 0, 0), 0))
   const splitX = (Math.min(1, Math.max(0, splitPosition)) - 0.5) * parameters.length
   const solidClipPlane = useMemo(() => designViewMode === 'compare' ? new Plane(new Vector3(1, 0, 0), -splitX) : undefined, [designViewMode, splitX])
   const optimizedClipPlane = useMemo(() => designViewMode === 'compare' ? new Plane(new Vector3(-1, 0, 0), splitX) : undefined, [designViewMode, splitX])
+  const optimizing = optimizationFrame?.phase === 'scanning' || optimizationFrame?.phase === 'revealing' || optimizationFrame?.phase === 'heatmap' || optimizationFrame?.phase === 'metrics'
+  const scanX = ((optimizationFrame?.scanPosition ?? 0) - 0.5) * parameters.length
+  useEffect(() => { optimizationClipPlaneRef.current.constant = scanX }, [scanX])
+  const optimizationClipPlane = optimizing ? optimizationClipPlaneRef.current : undefined
   useEffect(() => {
     const controls = controlsRef.current
     const camera = cameraRef.current
@@ -60,7 +70,17 @@ export function BracketScene({ showGrid, viewMode, parameters, designViewMode, s
       <directionalLight castShadow intensity={2.2} color="#f4ffff" position={[100, 160, 150]} shadow-mapSize={[1024, 1024]} shadow-bias={-0.0002} />
       <spotLight castShadow intensity={18} angle={0.42} penumbra={0.8} position={[-120, 160, 110]} color="#4fd8e0" shadow-mapSize={[1024, 1024]} />
       <pointLight intensity={2.5} distance={280} color="#f2ac63" position={[140, -80, 100]} />
-      {(designViewMode === 'solid' || designViewMode === 'optimized') && <BracketGeometry parameters={parameters} />}
+      {optimizing ? (
+        <>
+          <BracketGeometry parameters={parameters} />
+          <LatticeStructure parameters={parameters} clipPlane={optimizationClipPlane} />
+          <RiskHeatmap parameters={parameters} process={process} opacity={optimizationFrame?.heatmapOpacity ?? 0} clipPlane={optimizationClipPlane} />
+          <mesh position={[scanX, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[parameters.depth + 18, parameters.height + 18]} />
+            <meshBasicMaterial color="#a7ffff" transparent opacity={0.16} depthWrite={false} side={DoubleSide} />
+          </mesh>
+        </>
+      ) : (designViewMode === 'solid' || designViewMode === 'optimized') && <BracketGeometry parameters={parameters} />}
       {designViewMode === 'optimized' && <LatticeStructure parameters={parameters} />}
       {designViewMode === 'compare' && (
         <>

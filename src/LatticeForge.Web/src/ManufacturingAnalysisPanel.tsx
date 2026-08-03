@@ -1,21 +1,35 @@
-import { AlertTriangle, CheckCircle2, Clock3, Coins, Gauge, RefreshCw, ShieldCheck, Weight } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock3, Coins, Gauge, RefreshCw, ShieldCheck, Sparkles, SkipForward, Weight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { ManufacturingAnalysis } from './manufacturingApi'
 import type { AnalysisStatus } from './useManufacturingAnalysis'
+import type { OptimizationPhase } from './optimizationSequence'
 
 type ManufacturingAnalysisPanelProps = {
   status: AnalysisStatus
   data: ManufacturingAnalysis | null
   error: string | null
   retry: () => void
+  onOptimize?: () => void
+  onSkip?: () => void
+  optimizationPhase?: OptimizationPhase
+  optimizationRunning?: boolean
+  optimizationHasRun?: boolean
+  metricsProgress?: number
 }
 
-export function ManufacturingAnalysisPanel({ status, data, error, retry }: ManufacturingAnalysisPanelProps) {
+export function ManufacturingAnalysisPanel({ status, data, error, retry, onOptimize, onSkip, optimizationPhase = 'idle', optimizationRunning = false, optimizationHasRun = false, metricsProgress = 0 }: ManufacturingAnalysisPanelProps) {
   const isPending = status === 'idle' || status === 'loading'
   const heading = status === 'success' ? 'Analysis ready' : status === 'loading' ? 'Calculating estimate' : status === 'validation' ? 'Design needs attention' : status === 'unavailable' || status === 'error' ? 'Analysis unavailable' : 'Awaiting analysis'
   const correction = data?.warnings.length ? correctionFor(data.warnings[0]) : null
   return (
     <div className="panel-content analysis-content">
+      {onOptimize && <div className="optimization-action">
+        <div className="optimization-action-header"><Sparkles size={14} aria-hidden="true" /><span>Manufacturing pathway</span></div>
+        {!optimizationHasRun && <p className="optimization-hint">Sweep the design to reveal lattice savings and overhang risk.</p>}
+        {optimizationRunning
+          ? <button className="primary-button optimization-skip" type="button" onClick={onSkip}><SkipForward size={14} aria-hidden="true" /> Skip animation</button>
+          : <button className="primary-button" type="button" onClick={onOptimize} disabled={optimizationPhase === 'complete'}><Sparkles size={14} aria-hidden="true" /> Optimize for Manufacturing</button>}
+      </div>}
       <div className={`analysis-state analysis-state-${status}`} role="status" aria-live="polite">
         {status === 'success' ? <CheckCircle2 size={13} aria-hidden="true" /> : status === 'loading' ? <RefreshCw className="spin" size={13} aria-hidden="true" /> : <span className="state-dot" aria-hidden="true" />}
         <span>{heading}</span>
@@ -30,7 +44,7 @@ export function ManufacturingAnalysisPanel({ status, data, error, retry }: Manuf
       )}
       {data && status === 'success' && <>
         <p className="analysis-intro">Deterministic server-side estimate for the selected process and material.</p>
-        <div className="metric-grid">
+        <div className="metric-grid" style={{ opacity: 0.72 + metricsProgress * 0.28 }}>
           <Metric icon={<Gauge size={13} />} label="Printability" value={formatNumber(data.printabilityScore)} unit="/100" emphasis />
           <Metric icon={<Weight size={13} />} label="Optimized weight" value={formatNumber(data.estimatedWeight)} unit="g" />
           <Metric icon={<Coins size={13} />} label="Illustrative cost" value={formatNumber(data.estimatedCost)} unit="EUR" />

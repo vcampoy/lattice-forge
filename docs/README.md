@@ -19,9 +19,11 @@ This documentation describes the product and the software that exist today. It i
 | 03 ? Parametric Three.js viewport | Implemented | Procedural bracket geometry, orbit/reset camera, studio lighting, floor grid, WebGL fallback, and geometry normalization tests |
 | 04 | Implemented | Typed live design controls, shared geometry state, presets, material/process compatibility, and live Three.js updates |
 | 05 | Implemented | Bounded instanced lattice, Solid/Optimized/Compare modes, and draggable/keyboard comparison split |
-| 06–11 | Planned | Live API analysis, optimization scan/heatmap, persistence, hardening, and release review |
+| 06 | Implemented | Live API analysis, debounced cancellation, resilient states, comparison metrics, and illustrative disclosure |
+| 07 | Implemented | Optimization scan, lattice reveal, deterministic risk heatmap, and reduced-motion flow |
+| 08–11 | Planned | Persistence, STL export, hardening, interview delivery, and final review |
 
-The current UI is an industrial workspace with a procedural Three.js bracket viewport. Geometry controls now update the procedural bracket live, and phase 05 adds a bounded conceptual lattice with Solid/Optimized/Compare views. Heatmap reveal, live analysis integration, persistence, and export remain planned.
+The current UI is an industrial workspace with a procedural Three.js bracket viewport. Geometry controls now update the procedural bracket live, phase 05 adds a bounded conceptual lattice with Solid/Optimized/Compare views, phase 06 adds live API analysis, and phase 07 adds the controlled optimization scan with deterministic risk heatmap. Persistence and export remain planned.
 
 ## Documentation ownership
 

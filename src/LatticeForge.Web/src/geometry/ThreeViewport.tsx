@@ -4,11 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BracketScene } from './BracketScene'
 import type { BracketGeometryParameters } from './geometryParameters'
 import type { DesignViewMode } from '../useDesignStore'
+import type { ManufacturingProcess } from '../useDesignStore'
+import type { OptimizationFrame } from '../optimizationSequence'
 type ThreeViewportProps = {
   showGrid: boolean
   viewMode: 'orbit' | 'front' | 'section'
   parameters: BracketGeometryParameters & { latticeDensity: number }
   designViewMode: DesignViewMode
+  process: ManufacturingProcess
+  optimizationFrame?: OptimizationFrame
 }
 function canUseWebGL(): boolean {
   if (typeof document === 'undefined') return false
@@ -20,7 +24,7 @@ function canUseWebGL(): boolean {
     return false
   }
 }
-export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode }: ThreeViewportProps) {
+export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, process, optimizationFrame }: ThreeViewportProps) {
   const [webglAvailable] = useState(canUseWebGL)
   const [resetView, setResetView] = useState<(() => void) | null>(null)
   const [splitPosition, setSplitPosition] = useState(0.5)
@@ -44,6 +48,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode }
     }
   }, [isDraggingSplit, updateSplitFromClientX])
   const cameraLabel = useMemo(() => viewMode === 'orbit' ? 'Perspective' : viewMode === 'front' ? 'Front elevation' : 'Section angle', [viewMode])
+  const optimizationActive = optimizationFrame?.phase === 'scanning' || optimizationFrame?.phase === 'revealing' || optimizationFrame?.phase === 'heatmap' || optimizationFrame?.phase === 'metrics'
   return (
     <div ref={viewportRef} className="viewport-card viewport-three" data-testid="three-viewport">
       <div className="viewport-toolbar">
@@ -62,7 +67,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode }
               gl.localClippingEnabled = true
             }}
           >
-            <BracketScene showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} splitPosition={splitPosition} onResetReady={registerReset} />
+            <BracketScene showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} process={process} optimizationFrame={optimizationFrame} splitPosition={splitPosition} onResetReady={registerReset} />
           </Canvas>
         ) : (
           <div className="webgl-fallback" role="status">
@@ -104,6 +109,12 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode }
         </div>
       )}
       <div className="viewport-overlay" aria-hidden="true" />
+      {optimizationActive && <div className="optimization-legend" role="status" aria-live="polite">
+        <strong>Overhang risk</strong>
+        <span className="risk-scale" aria-hidden="true"><i /><i /><i /></span>
+        <span>low · review · high</span>
+        <span className="risk-pattern">/// = review surface</span>
+      </div>}
       <div className="viewport-toolbar viewport-toolbar-bottom">
         <span className="viewport-camera-label" aria-label="Current dimensions">{cameraLabel} Â· {parameters.length} Ã— {parameters.height} Ã— {parameters.depth} mm</span>
         <button className="viewport-reset" type="button" onClick={() => resetView?.()} disabled={!webglAvailable || resetView === null}>

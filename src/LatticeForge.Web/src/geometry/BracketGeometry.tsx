@@ -8,7 +8,7 @@ type BracketGeometryProps = {
   clipPlane?: Plane
 }
 
-function createBracketGeometry(parameters: BracketGeometryParameters): ExtrudeGeometry {
+export function createBracketGeometry(parameters: BracketGeometryParameters): ExtrudeGeometry {
   const halfLength = parameters.length / 2
   const halfHeight = parameters.height / 2
   const armHeight = Math.max(parameters.wallThickness * 2.5, parameters.height * 0.2)
