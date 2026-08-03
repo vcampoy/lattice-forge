@@ -125,3 +125,7 @@ The npm-to-pnpm frontend tooling migration has no product, pricing, or manufactu
 ## Phase 08 — Persistence and export experience
 
 Named local design snapshots and recent-design loading make the demo journey recoverable without introducing accounts or a production data model. STL and JSON export make the concept portable for discussion, but the product deliberately discloses that the lattice is a demo mesh and has not been checked for watertightness or printability. This improves interview-demo usefulness without turning illustrative analysis into a manufacturing promise.
+
+## Phase 09 — Hardening and responsible interaction
+
+Phase 09 adds no new product capability. It reduces demo risk by making the existing workflow usable on narrow screens, keyboard reachable outside raw 3D orbit, resilient to API/material/WebGL failure, and honest about unsupported browser and engineering conditions. Rendering caps and reduced-motion handling protect responsiveness without changing the illustrative manufacturing model or making a zero-vulnerability claim.

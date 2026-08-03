@@ -33,7 +33,7 @@ function limitsFor(parameter: DesignParameter, values: Record<DesignParameter, n
   }
   return base
 }
-export function DesignControls({ materials }: { materials: readonly MaterialOption[] }) {
+export function DesignControls({ materials, materialsState = 'ready' }: { materials: readonly MaterialOption[]; materialsState?: 'checking' | 'ready' | 'offline' }) {
   const design = useDesignStore()
   const values: Record<DesignParameter, number> = useMemo(() => ({
     length: design.length,
@@ -55,6 +55,8 @@ export function DesignControls({ materials }: { materials: readonly MaterialOpti
           <div><span className="section-heading">Parametric envelope</span><span className="section-index">01</span></div>
           <span className={`modified-indicator ${design.isModified() ? 'is-modified' : ''}`} role="status" aria-live="polite">{design.isModified() ? 'Modified' : 'Balanced'}</span>
         </div>
+        {materialsState === 'checking' && <p className="control-status" role="status" aria-live="polite">Loading material catalogue.</p>}
+        {materialsState === 'offline' && <p className="control-status control-status-offline" role="status" aria-live="polite">API offline. Using the demo material catalogue.</p>}
         <div className="preset-row" aria-label="Design presets">
           {PRESET_NAMES.map((preset) => (
             <button key={preset} type="button" className={`preset-button ${design.activePreset === preset ? 'active' : ''}`} aria-pressed={design.activePreset === preset} onClick={() => design.applyPreset(preset)}>{preset}</button>

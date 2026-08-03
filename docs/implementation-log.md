@@ -356,3 +356,41 @@ The phase tests cover creation, restart restoration, validation, corrupted rows,
 - docs/technical-architecture.md
 - docs/business-model.md
 - docs/implementation-log.md
+## Phase 09 — Harden responsiveness, accessibility, and performance
+
+**Status:** Implemented
+
+### Delivered
+
+- Added independently collapsible Design Controls and Manufacturing Analysis panels for narrow layouts while preserving the viewport.
+- Added accessible expanded state, focus handling, dialog focus trap, validation error association, live status messages, and keyboard compare-split controls.
+- Added reduced-motion propagation to the Three.js camera controls and CSS motion suppression.
+- Added WebGL context loss/restoration handling and explicit fallback/error states.
+- Added a bounded rendering budget for DPR, lattice instance counts, and desktop versus narrow shadow cost.
+- Reduced avoidable React/Three.js work by memoizing stable parameter objects and fixing effect dependencies.
+- Audited dependencies without risky major upgrades; no known production dependency vulnerabilities were reported by pnpm audit.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| dotnet build LatticeForge.sln | Passed; existing NU1903 SQLite vulnerability warning |
+| dotnet test LatticeForge.sln | Passed — 19 tests; existing NU1903 warning |
+| pnpm test in src/LatticeForge.Web | Passed — 13 files, 45 tests |
+| pnpm build in src/LatticeForge.Web | Passed; Vite emitted the existing non-blocking large-chunk advisory |
+| pnpm lint in src/LatticeForge.Web | Passed; existing Fast Refresh warning remains in BracketGeometry.tsx |
+| pnpm audit --prod --audit-level high in src/LatticeForge.Web | Passed — no known vulnerabilities found |
+| git diff --check | Passed |
+
+### Remaining limitations
+
+- Vitest does not prove the real browser/device matrix, WebGL context recovery, or screen-reader announcements.
+- Raw Three.js orbit interaction remains pointer-oriented; all surrounding controls are keyboard reachable.
+- The Vite production bundle remains above the 500 kB advisory threshold.
+- SQLitePCLRaw.lib.e_sqlite3 still reports NU1903 through the current .NET dependency graph.
+
+### Documentation changed
+
+- docs/technical-architecture.md
+- docs/business-model.md
+- docs/implementation-log.md

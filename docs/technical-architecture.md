@@ -263,3 +263,11 @@ The API stores DesignEntity records in SQLite and exposes POST /api/designs, GET
 The web client keeps persistence orchestration in DesignPersistenceControls.tsx and typed request/export helpers in designPersistence.ts. Save uses an accessible name dialog; Recent Designs loads and restores parameters without changing camera/view state. STL export builds a temporary optimized bracket+lattice scene, uses STLExporter, then disposes cloned geometry/material resources. JSON export includes schema version, selected process/material, parameters, and the illustrative-data disclaimer. Export filenames are reduced to safe ASCII filename characters and failures are shown as live status/error messages.
 
 The lattice STL is a conceptual demo mesh. The application does not claim watertightness, printability, engineering validation, or Materialise affiliation.
+
+## Responsiveness, accessibility, and performance hardening (phase 09)
+
+Phase 09 hardens the existing workspace without adding a product capability. Design Controls and Manufacturing Analysis can collapse independently on narrow layouts while the viewport remains present. Native controls retain accessible names, pressed/expanded state, visible focus, status announcements, dialog focus trapping, and error associations. The compare split remains keyboard-operable through arrows, Home, and End.
+
+ThreeViewport now derives a bounded rendering budget: desktop DPR is capped at 1.5, narrow layouts use DPR 1, lattice instances are capped at 512 on desktop and 256 on narrow layouts, and expensive shadows/contact shadows are disabled on narrow screens. Geometry, materials, clipping planes, and lattice instance matrices remain memoized or updated only when their inputs change. WebGL context loss/restoration events are surfaced without taking down the surrounding controls.
+
+The browser media query for prefers-reduced-motion is forwarded to OrbitControls and disables damping; CSS also removes decorative animation and transitions. Health, materials, WebGL, analysis, validation, loading, and offline states remain explicit. A real browser/device matrix is not automated in Vitest; manual checks remain required for WebGL context loss, screen-reader output, and the 1440x900, 1280x720, 1024x768, and 390px visual breakpoints.

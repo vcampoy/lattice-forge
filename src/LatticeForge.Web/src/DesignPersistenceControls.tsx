@@ -23,6 +23,7 @@ export function DesignPersistenceControls() {
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const saveTriggerRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const parameters = useMemo(() => ({
     length: design.length,
     height: design.height,
@@ -41,6 +42,19 @@ export function DesignPersistenceControls() {
       if (event.key === 'Escape') {
         setIsSaveOpen(false)
         saveTriggerRef.current?.focus()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('button, input, select, textarea, [href], [tabindex]:not([tabindex="-1"])')
+      if (!focusable || focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
       }
     }
     document.addEventListener('keydown', closeOnEscape)
@@ -125,12 +139,12 @@ export function DesignPersistenceControls() {
       {error && !isSaveOpen && <div className="persistence-error" role="alert">{error}</div>}
       {isSaveOpen && (
         <div className="persistence-dialog-backdrop">
-          <div className="persistence-dialog" role="dialog" aria-modal="true" aria-labelledby="save-design-title" aria-describedby="save-design-description">
+            <div ref={dialogRef} className="persistence-dialog" role="dialog" aria-modal="true" aria-labelledby="save-design-title" aria-describedby="save-design-description">
             <h2 id="save-design-title">Save Design</h2>
             <p id="save-design-description">Save the current geometry, material, and process selection.</p>
             <label htmlFor="design-name">Design name</label>
-            <input id="design-name" type="text" maxLength={80} value={name} autoFocus onChange={(event) => setName(event.target.value)} />
-            {error && <p className="persistence-dialog-error" role="alert">{error}</p>}
+            <input id="design-name" type="text" maxLength={80} value={name} autoFocus required aria-invalid={Boolean(error)} aria-errormessage={error ? 'save-design-error' : undefined} onChange={(event) => { setName(event.target.value); if (error) setError(null) }} />
+            {error && <p id="save-design-error" className="persistence-dialog-error" role="alert">{error}</p>}
             <div className="persistence-dialog-actions">
               <button type="button" onClick={() => { setIsSaveOpen(false); saveTriggerRef.current?.focus() }}>Cancel</button>
               <button type="button" onClick={() => void handleSave()}>Save</button>

@@ -46,6 +46,9 @@ const designViewModes: Array<{ id: 'solid' | 'optimized' | 'compare'; label: str
 
 function App() {
   const [healthState, setHealthState] = useState<HealthState>('checking')
+  const [materialsState, setMaterialsState] = useState<'checking' | 'ready' | 'offline'>('checking')
+  const [designPanelCollapsed, setDesignPanelCollapsed] = useState(false)
+  const [analysisPanelCollapsed, setAnalysisPanelCollapsed] = useState(false)
   const { viewMode, showGrid, setViewMode, toggleGrid } = useWorkspaceStore()
   const design = useDesignStore()
   const [materials, setMaterials] = useState<readonly MaterialOption[]>(FALLBACK_MATERIALS)
@@ -70,8 +73,17 @@ function App() {
     design.selectedProcess,
     design.wallThickness,
   ])
+  const viewportParameters = useMemo(() => ({
+    length: design.length,
+    height: design.height,
+    depth: design.depth,
+    wallThickness: design.wallThickness,
+    holeRadius: design.holeRadius,
+    latticeDensity: design.latticeDensity,
+  }), [design.depth, design.height, design.holeRadius, design.latticeDensity, design.length, design.wallThickness])
+  const analysisSignature = useMemo(() => JSON.stringify(analysisQuery), [analysisQuery])
   const analysis = useManufacturingAnalysis(analysisQuery)
-  const optimization = useOptimizationSequence({ designSignature: JSON.stringify(analysisQuery), onComplete: () => design.setDesignViewMode('compare') })
+  const optimization = useOptimizationSequence({ designSignature: analysisSignature, onComplete: () => design.setDesignViewMode('compare') })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -94,9 +106,15 @@ function App() {
     const loadMaterials = async (): Promise<void> => {
       try {
         const response = await fetch('/api/materials', { signal: controller.signal })
-        if (!response.ok) return
+        if (!response.ok) {
+          setMaterialsState('offline')
+          return
+        }
         const payload: unknown = await response.json()
-        if (!Array.isArray(payload)) return
+        if (!Array.isArray(payload)) {
+          setMaterialsState('offline')
+          return
+        }
 
         const parsed = payload.filter((item): item is MaterialOption => {
           if (!item || typeof item !== 'object') return false
@@ -104,9 +122,15 @@ function App() {
           return typeof candidate.id === 'string'
             && ['Sls', 'Sla', 'MetalLpbf'].includes(candidate.process as string)
         })
-        if (parsed.length > 0) setMaterials(parsed)
+        if (parsed.length > 0) {
+          setMaterials(parsed)
+          setMaterialsState('ready')
+        } else {
+          setMaterialsState('offline')
+        }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return
+        setMaterialsState('offline')
       }
     }
 
@@ -149,18 +173,18 @@ function App() {
       </header>
 
       <div className="workspace-grid">
-        <aside className="panel design-panel" aria-labelledby="design-controls-title">
-          <PanelHeader icon={<SlidersHorizontal size={16} />} eyebrow="Geometry" title="Design Controls" />
-          <DesignControls materials={materials} />
+        <aside className={`panel design-panel${designPanelCollapsed ? ' panel-collapsed' : ''}`} aria-labelledby="design-controls-title">
+          <PanelHeader icon={<SlidersHorizontal size={16} />} eyebrow="Geometry" title="Design Controls" collapsed={designPanelCollapsed} onToggle={() => setDesignPanelCollapsed((collapsed) => !collapsed)} />
+          {!designPanelCollapsed && <DesignControls materials={materials} materialsState={materialsState} />}
         </aside>
 
         <section className="viewport-region" aria-label="3D design viewport" role="region">
-          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={design} process={design.selectedProcess} designViewMode={design.designViewMode} optimizationFrame={optimization.frame} />
+          <Viewport showGrid={showGrid} viewMode={viewMode} parameters={viewportParameters} process={design.selectedProcess} designViewMode={design.designViewMode} optimizationFrame={optimization.frame} />
         </section>
 
-        <aside className="panel analysis-panel" aria-labelledby="analysis-title">
-          <PanelHeader icon={<Waypoints size={16} />} eyebrow="Simulation" title="Manufacturing Analysis" />
-          <ManufacturingAnalysisPanel {...analysis} onOptimize={optimization.start} onSkip={optimization.skip} optimizationPhase={optimization.phase} optimizationRunning={optimization.isRunning} optimizationHasRun={optimization.hasRun} metricsProgress={optimization.frame.metricsProgress} />
+        <aside className={`panel analysis-panel${analysisPanelCollapsed ? ' panel-collapsed' : ''}`} aria-labelledby="manufacturing-analysis-title">
+          <PanelHeader icon={<Waypoints size={16} />} eyebrow="Simulation" title="Manufacturing Analysis" collapsed={analysisPanelCollapsed} onToggle={() => setAnalysisPanelCollapsed((collapsed) => !collapsed)} />
+          {!analysisPanelCollapsed && <ManufacturingAnalysisPanel {...analysis} onOptimize={optimization.start} onSkip={optimization.skip} optimizationPhase={optimization.phase} optimizationRunning={optimization.isRunning} optimizationHasRun={optimization.hasRun} metricsProgress={optimization.frame.metricsProgress} />}
         </aside>
       </div>
 
@@ -193,15 +217,15 @@ function App() {
   )
 }
 
-function PanelHeader({ icon, eyebrow, title }: { icon: ReactNode; eyebrow: string; title: string }) {
+function PanelHeader({ icon, eyebrow, title, collapsed, onToggle }: { icon: ReactNode; eyebrow: string; title: string; collapsed: boolean; onToggle: () => void }) {
   return (
     <div className="panel-header">
       <div className="panel-icon">{icon}</div>
       <div>
         <p className="panel-eyebrow">{eyebrow}</p>
-        <h2>{title}</h2>
+        <h2 id={`${title.toLowerCase().replaceAll(' ', '-')}-title`}>{title}</h2>
       </div>
-      <button className="collapse-button" type="button" aria-label={`Collapse ${title}`} title={`Collapse ${title}`}>
+      <button className="collapse-button" type="button" aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${title}`} aria-expanded={!collapsed} title={`${collapsed ? 'Expand' : 'Collapse'} ${title}`} onClick={onToggle}>
         <PanelRight size={15} />
       </button>
     </div>

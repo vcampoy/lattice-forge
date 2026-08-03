@@ -70,10 +70,15 @@ export function BracketGeometry({ parameters, clipPlane }: BracketGeometryProps)
       clearcoatRoughness: 0.18,
       emissive: '#062d31',
       emissiveIntensity: 0.16,
-      clippingPlanes: clipPlane ? [clipPlane] : [],
+      clippingPlanes: [],
     }),
-    [clipPlane],
+    [],
   )
+
+  useEffect(() => {
+    material.clippingPlanes = clipPlane ? [clipPlane] : []
+    material.needsUpdate = true
+  }, [clipPlane, material])
 
   useEffect(() => {
     material.color.set(selected ? '#a9e1df' : hovered ? '#8fbcc0' : '#748a91')

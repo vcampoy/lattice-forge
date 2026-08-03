@@ -12,8 +12,14 @@ type RiskHeatmapProps = {
 }
 
 export function RiskHeatmap({ parameters, process, opacity, clipPlane }: RiskHeatmapProps) {
-  const geometry = useMemo(() => createBracketGeometry(parameters), [parameters])
-  const material = useMemo(() => new MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, clippingPlanes: clipPlane ? [clipPlane] : [] }), [clipPlane])
+  const { depth, height, holeRadius, length, wallThickness } = parameters
+  const geometry = useMemo(() => createBracketGeometry({ depth, height, holeRadius, length, wallThickness }), [depth, height, holeRadius, length, wallThickness])
+  const material = useMemo(() => new MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, clippingPlanes: [] }), [])
+
+  useEffect(() => {
+    material.clippingPlanes = clipPlane ? [clipPlane] : []
+    material.needsUpdate = true
+  }, [clipPlane, material])
 
   useEffect(() => {
     const normals = geometry.getAttribute('normal')

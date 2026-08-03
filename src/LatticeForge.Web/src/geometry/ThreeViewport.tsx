@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BracketScene } from './BracketScene'
@@ -6,6 +6,7 @@ import type { BracketGeometryParameters } from './geometryParameters'
 import type { DesignViewMode } from '../useDesignStore'
 import type { ManufacturingProcess } from '../useDesignStore'
 import type { OptimizationFrame } from '../optimizationSequence'
+import { getRenderBudget, type RenderBudget } from '../renderingBudget'
 type ThreeViewportProps = {
   showGrid: boolean
   viewMode: 'orbit' | 'front' | 'section'
@@ -24,12 +25,52 @@ function canUseWebGL(): boolean {
     return false
   }
 }
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!mediaQuery) return undefined
+    const update = () => setReduced(mediaQuery.matches)
+    mediaQuery.addEventListener('change', update)
+    return () => mediaQuery.removeEventListener('change', update)
+  }, [])
+
+  return reduced
+}
+
+function WebglLifecycle({ onContextLost, onContextRestored }: { onContextLost: () => void; onContextRestored: () => void }) {
+  const gl = useThree(({ gl }) => gl)
+
+  useEffect(() => {
+    const canvas = gl.domElement
+    const handleContextLost = (event: Event) => {
+      event.preventDefault()
+      onContextLost()
+    }
+    canvas.addEventListener('webglcontextlost', handleContextLost, false)
+    const handleContextRestored = () => onContextRestored()
+    canvas.addEventListener('webglcontextrestored', handleContextRestored, false)
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleContextLost)
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored)
+    }
+  }, [gl, onContextLost, onContextRestored])
+
+  return null
+}
+
 export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, process, optimizationFrame }: ThreeViewportProps) {
   const [webglAvailable] = useState(canUseWebGL)
+  const [webglLost, setWebglLost] = useState(false)
   const [resetView, setResetView] = useState<(() => void) | null>(null)
   const [splitPosition, setSplitPosition] = useState(0.5)
   const [isDraggingSplit, setIsDraggingSplit] = useState(false)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
+  const [isNarrow, setIsNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 560px)').matches === true)
+  const renderBudget: RenderBudget = useMemo(() => getRenderBudget({ width: isNarrow ? 390 : 1440, devicePixelRatio: typeof window === 'undefined' ? 1 : window.devicePixelRatio }), [isNarrow])
   const registerReset = useCallback((reset: () => void) => setResetView(() => reset), [])
   const updateSplitFromClientX = useCallback((clientX: number) => {
     const bounds = viewportRef.current?.getBoundingClientRect()
@@ -47,8 +88,17 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
       window.removeEventListener('pointerup', handlePointerUp)
     }
   }, [isDraggingSplit, updateSplitFromClientX])
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.('(max-width: 560px)')
+    if (!mediaQuery) return undefined
+    const update = () => setIsNarrow(mediaQuery.matches)
+    mediaQuery.addEventListener('change', update)
+    return () => mediaQuery.removeEventListener('change', update)
+  }, [])
   const cameraLabel = useMemo(() => viewMode === 'orbit' ? 'Perspective' : viewMode === 'front' ? 'Front elevation' : 'Section angle', [viewMode])
   const optimizationActive = optimizationFrame?.phase === 'scanning' || optimizationFrame?.phase === 'revealing' || optimizationFrame?.phase === 'heatmap' || optimizationFrame?.phase === 'metrics'
+  const handleContextLost = useCallback(() => setWebglLost(true), [])
+  const handleContextRestored = useCallback(() => setWebglLost(false), [])
   return (
     <div ref={viewportRef} className="viewport-card viewport-three" data-testid="three-viewport">
       <div className="viewport-toolbar">
@@ -58,16 +108,17 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
       <div className="viewport-scene">
         {webglAvailable ? (
           <Canvas
-            shadows
+            shadows={renderBudget.shadows}
             camera={{ fov: 42, near: 0.1, far: 1000, position: [150, 108, 178] }}
-            dpr={[1, 1.75]}
+            dpr={renderBudget.dpr}
             gl={{ antialias: true, powerPreference: 'high-performance' }}
             onCreated={({ gl }) => {
               gl.setClearColor('#0b1115')
               gl.localClippingEnabled = true
             }}
           >
-            <BracketScene showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} process={process} optimizationFrame={optimizationFrame} splitPosition={splitPosition} onResetReady={registerReset} />
+            <WebglLifecycle onContextLost={handleContextLost} onContextRestored={handleContextRestored} />
+            <BracketScene showGrid={showGrid} viewMode={viewMode} parameters={parameters} designViewMode={designViewMode} process={process} optimizationFrame={optimizationFrame} splitPosition={splitPosition} onResetReady={registerReset} reducedMotion={reducedMotion} renderBudget={renderBudget} />
           </Canvas>
         ) : (
           <div className="webgl-fallback" role="status">
@@ -75,6 +126,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
             <span>WebGL is not available in this browser. Design controls remain usable.</span>
           </div>
         )}
+        {webglLost && <div className="webgl-fallback webgl-context-lost" role="alert"><strong>3D preview interrupted</strong><span>WebGL context was lost. Reload the preview to restore the model.</span></div>}
       </div>
       {designViewMode === 'compare' && (
         <div
@@ -109,7 +161,7 @@ export function ThreeViewport({ showGrid, viewMode, parameters, designViewMode, 
         </div>
       )}
       <div className="viewport-overlay" aria-hidden="true" />
-      {optimizationActive && <div className="optimization-legend" role="status" aria-live="polite">
+      {optimizationActive && <div className="optimization-legend" role="group" aria-label="Overhang risk legend">
         <strong>Overhang risk</strong>
         <span className="risk-scale" aria-hidden="true"><i /><i /><i /></span>
         <span>low · review · high</span>

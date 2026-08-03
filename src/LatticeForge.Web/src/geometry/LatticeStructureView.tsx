@@ -6,10 +6,12 @@ import { calculateLatticeInstances, getLatticeStrutScale } from './latticeStruct
 type LatticeStructureProps = {
   parameters: BracketGeometryParameters & { latticeDensity: number }
   clipPlane?: Plane
+  maxInstances?: number
 }
 
-export function LatticeStructure({ parameters, clipPlane }: LatticeStructureProps) {
-  const instances = useMemo(() => calculateLatticeInstances(parameters), [parameters])
+export function LatticeStructure({ parameters, clipPlane, maxInstances }: LatticeStructureProps) {
+  const { depth, height, holeRadius, latticeDensity, length, wallThickness } = parameters
+  const instances = useMemo(() => calculateLatticeInstances({ depth, height, holeRadius, latticeDensity, length, wallThickness }, maxInstances), [depth, height, holeRadius, latticeDensity, length, maxInstances, wallThickness])
   const geometry = useMemo(() => new CylinderGeometry(0.55, 0.55, 1, 8), [])
   const material = useMemo(() => new MeshStandardMaterial({
     color: '#62e8eb',
@@ -17,9 +19,14 @@ export function LatticeStructure({ parameters, clipPlane }: LatticeStructureProp
     emissiveIntensity: 0.52,
     metalness: 0.72,
     roughness: 0.23,
-    clippingPlanes: clipPlane ? [clipPlane] : [],
-  }), [clipPlane])
+    clippingPlanes: [],
+  }), [])
   const meshRef = useRef<InstancedMesh>(null)
+
+  useEffect(() => {
+    material.clippingPlanes = clipPlane ? [clipPlane] : []
+    material.needsUpdate = true
+  }, [clipPlane, material])
 
   useEffect(() => {
     const mesh = meshRef.current
@@ -29,7 +36,7 @@ export function LatticeStructure({ parameters, clipPlane }: LatticeStructureProp
     const quaternion = new Quaternion()
     const matrix = mesh.matrix
     const up = new Vector3(0, 1, 0)
-    const radius = Math.min(0.95, Math.max(0.34, Math.min(parameters.length / 14, parameters.height / 12) / Math.max(1, Math.sqrt(instances.length / 14))))
+    const radius = Math.min(0.95, Math.max(0.34, Math.min(length / 14, height / 12) / Math.max(1, Math.sqrt(instances.length / 14))))
     const scale = new Vector3(radius, 1, radius)
 
     instances.forEach((instance, index) => {
@@ -45,7 +52,7 @@ export function LatticeStructure({ parameters, clipPlane }: LatticeStructureProp
       mesh.setMatrixAt(index, matrix)
     })
     mesh.instanceMatrix.needsUpdate = true
-  }, [geometry, instances, parameters.height, parameters.length])
+  }, [geometry, instances, height, length])
 
   useEffect(() => () => {
     geometry.dispose()

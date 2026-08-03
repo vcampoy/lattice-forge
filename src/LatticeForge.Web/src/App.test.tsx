@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 describe('Lattice Forge workspace shell', () => {
@@ -20,5 +20,16 @@ describe('Lattice Forge workspace shell', () => {
     render(<App />)
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(3)
     expect(screen.getByText(/awaiting analysis/i)).toBeInTheDocument()
+  })
+
+  it('allows narrow-screen panels to collapse without removing the viewport', async () => {
+    render(<App />)
+
+    const designToggle = screen.getByRole('button', { name: /collapse design controls/i })
+    fireEvent.click(designToggle)
+
+    expect(designToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText(/parametric envelope/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /3d design viewport/i })).toBeInTheDocument()
   })
 })
