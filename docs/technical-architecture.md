@@ -271,3 +271,10 @@ Phase 09 hardens the existing workspace without adding a product capability. Des
 ThreeViewport now derives a bounded rendering budget: desktop DPR is capped at 1.5, narrow layouts use DPR 1, lattice instances are capped at 512 on desktop and 256 on narrow layouts, and expensive shadows/contact shadows are disabled on narrow screens. Geometry, materials, clipping planes, and lattice instance matrices remain memoized or updated only when their inputs change. WebGL context loss/restoration events are surfaced without taking down the surrounding controls.
 
 The browser media query for prefers-reduced-motion is forwarded to OrbitControls and disables damping; CSS also removes decorative animation and transitions. Health, materials, WebGL, analysis, validation, loading, and offline states remain explicit. A real browser/device matrix is not automated in Vitest; manual checks remain required for WebGL context loss, screen-reader output, and the 1440x900, 1280x720, 1024x768, and 390px visual breakpoints.
+## Interview delivery and local operations (phase 10)
+
+Phase 10 adds no product capability. `README.md` is now the short reviewer entry point: it explains the product pitch, Mermaid architecture, setup commands, endpoint contract, domain equations and units, React Three Fiber/direct Three.js boundary, performance/accessibility decisions, tests, limitations, and genuine production gaps.
+
+`docs/INTERVIEW_SCRIPT.md` contains the 90-second demo narrative, five-minute technical walkthrough, evidence-based senior questions, and explicit one-day-demo tradeoffs. The root `start-dev.ps1` resolves absolute repository paths, validates the API/frontend prerequisites, launches `dotnet` and `pnpm` without visible helper windows, writes logs to the user temp directory, and stops both process trees when interrupted. The existing `scripts/start-backend.ps1` and `scripts/start-frontend.ps1` remain documented manual fallbacks.
+
+The launcher is intentionally local-development only. It does not provide production process supervision, deployment, authentication, or log rotation.

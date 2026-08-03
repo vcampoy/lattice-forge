@@ -129,3 +129,8 @@ Named local design snapshots and recent-design loading make the demo journey rec
 ## Phase 09 — Hardening and responsible interaction
 
 Phase 09 adds no new product capability. It reduces demo risk by making the existing workflow usable on narrow screens, keyboard reachable outside raw 3D orbit, resilient to API/material/WebGL failure, and honest about unsupported browser and engineering conditions. Rendering caps and reduced-motion handling protect responsiveness without changing the illustrative manufacturing model or making a zero-vulnerability claim.
+## Phase 10 — Interview delivery boundary
+
+Phase 10 adds no product capability or commercial claim. It makes the existing value proposition easier to communicate: one deterministic DfAM interaction connects parametric design, a conceptual lattice, and illustrative manufacturing estimates while clearly separating demo behaviour from engineering validation.
+
+The new README and interview script improve reviewer understanding and presenter consistency. The one-command launcher reduces setup friction for an interview without changing the supported local workflow or introducing a production deployment promise. Genuine next steps remain validated manufacturing models, watertight export validation, production persistence, browser/device coverage, and operational observability.

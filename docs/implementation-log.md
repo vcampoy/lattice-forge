@@ -394,3 +394,43 @@ The phase tests cover creation, restart restoration, validation, corrupted rows,
 - docs/technical-architecture.md
 - docs/business-model.md
 - docs/implementation-log.md
+## Phase 10 — Prepare the interview delivery
+
+**Status:** Implemented
+
+### Delivered
+
+- Rewrote `README.md` as a sub-three-minute reviewer entry point with product pitch, Mermaid architecture, exact setup, API endpoints, equations and units, frontend/rendering boundary, performance/accessibility decisions, tests, limitations, and genuine production gaps.
+- Added `docs/INTERVIEW_SCRIPT.md` with the 90-second demo, five-minute technical walkthrough, senior-level questions with evidence-based answers, and one-day-demo tradeoffs.
+- Added root `start-dev.ps1`, which resolves absolute paths, validates prerequisites, starts hidden API/frontend processes, writes temporary logs, and stops both process trees on interruption.
+- Updated `docs/README.md` to distinguish implemented phases 08–10 from planned phase 11.
+
+### Verification
+
+| Command | Result |
+|---|---|
+| PowerShell parser validation for `start-dev.ps1` | Passed |
+| `start-dev.ps1` runtime smoke test | Passed; both servers started on ports 5100/5173 and stopped cleanly after Ctrl+C |
+| `dotnet build LatticeForge.sln` | Passed; existing NU1903 SQLite vulnerability warning |
+| `dotnet test LatticeForge.sln` | Passed — 19 tests; existing NU1903 warning |
+| `pnpm test` in `src/LatticeForge.Web` | Passed — 13 files, 45 tests |
+| `pnpm build` in `src/LatticeForge.Web` | Passed; existing Vite chunk-size advisory |
+| `pnpm lint` in `src/LatticeForge.Web` | Passed; existing Fast Refresh warning in `BracketGeometry.tsx` |
+| `pnpm audit --prod --audit-level high` in `src/LatticeForge.Web` | Passed — no known production vulnerabilities reported |
+| `git diff --check` | Passed |
+
+### Decisions and tradeoffs
+
+- Kept the existing two-script manual workflow as a fallback so the one-command launcher is convenience, not a hidden dependency.
+- Redirected launcher output to the user temp directory and used hidden child processes to avoid visible helper windows while preserving logs for diagnosis.
+- Used a process-tree cleanup function because `dotnet run` and package-manager launchers can create child processes that must stop together.
+- Kept the documentation honest: no verified screenshot is committed, browser/device QA remains a follow-up, and phase 11 is still a separate fresh-context review.
+
+### Documentation changed
+
+- `README.md`
+- `docs/README.md`
+- `docs/INTERVIEW_SCRIPT.md`
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`
