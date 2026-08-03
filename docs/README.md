@@ -15,10 +15,11 @@ This documentation describes the product and the software that exist today. It i
 |---|---|---|
 | 00 — Full-stack foundation | Implemented | .NET API, React/Vite client, API health check, and development proxy |
 | 01 — Manufacturing analysis | Implemented | Deterministic material catalogue and illustrative analysis API |
-| 02 — Industrial workspace shell | Implemented | Responsive workspace frame, design controls, CSS viewport placeholder, analysis panel, view toolbar, Zustand UI state, and accessible component tests |
-| 03–11 | Planned | Three.js experience, integration, persistence, hardening, and release review |
+| 02 ? Industrial workspace shell | Implemented | Responsive workspace frame, design controls, analysis panel, view toolbar, Zustand UI state, and accessible component tests |
+| 03 ? Parametric Three.js viewport | Implemented | Procedural bracket geometry, orbit/reset camera, studio lighting, floor grid, WebGL fallback, and geometry normalization tests |
+| 04?11 | Planned | Live controls, lattice/heatmap reveal, API integration, persistence, hardening, and release review |
 
-The current UI is an industrial workspace shell with a CSS viewport placeholder. It is **not** yet a Three.js 3D modeller; geometry controls remain presentational and live analysis integration is planned.
+The current UI is an industrial workspace with a procedural Three.js bracket viewport. Geometry controls remain presentational in phase 03; lattice and heatmap reveal, live analysis integration, persistence, and export remain planned.
 
 ## Documentation ownership
 

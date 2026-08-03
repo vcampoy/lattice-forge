@@ -92,4 +92,41 @@ No business model, target persona, pricing assumption, or safety boundary change
 
 ## Next phase
 
-Phase 03 will introduce the Three.js scene and preserve this shell boundary.
+Phase 04 will connect shared design controls to the Three.js scene and preserve this shell boundary.
+
+## Phase 03 — Parametric Three.js bracket viewport
+
+**Status:** Implemented
+
+### Phase 03 delivered
+
+- Installed Three.js, React Three Fiber, Drei, and Three.js type definitions.
+- Replaced the CSS placeholder with a responsive Canvas that caps device pixel ratio at 1.75 and uses a WebGL capability fallback.
+- Added a constrained, damped orbit camera with orbit/front/section framing and Reset view action.
+- Added procedural studio lights, contact shadows, local floor grid, and no remote HDR/runtime assets.
+- Added memoized, millimetre-scale `Shape` + `ExtrudeGeometry` bracket generation with two `Shape.holes`, bevels, titanium-like physical material, cyan edges, and hover/selection feedback.
+- Added explicit geometry/material disposal and pure `normalizeBracketParameters` tests before Three.js construction.
+- Kept lattice, heatmaps, API analysis integration, control wiring, persistence, and STL export out of scope.
+
+### Phase 03 verification
+
+| Command | Result |
+|---|---|
+| `npm test` in `src/LatticeForge.Web` | Passed — 4 tests |
+| `npm run build` in `src/LatticeForge.Web` | Passed (Vite emitted a non-blocking large-chunk advisory) |
+| `npm run lint` in `src/LatticeForge.Web` | Passed |
+| `dotnet test LatticeForge.sln` | Passed — 12 tests |
+
+### Phase 03 decisions and tradeoffs
+
+- Kept geometry parameters on phase-03 defaults so phase 04 can introduce one shared design store without duplicating state.
+- Used direct Three.js geometry/material APIs inside small React Three Fiber boundaries to make disposal and memoization explicit.
+- Used procedural lighting and contact shadows rather than remote HDR assets to keep the interview demo deterministic and offline-friendly.
+- Added a jsdom WebGL guard so component tests do not attempt unsupported canvas contexts; production browsers still perform capability detection.
+- Business impact: the central visual now communicates inspectable 3D design intent, but metrics remain pending and no engineering or Materialise affiliation claim was added.
+
+### Documentation changed
+
+- `docs/technical-architecture.md`
+- `docs/business-model.md`
+- `docs/implementation-log.md`

@@ -3,7 +3,6 @@ import {
   Box,
   CircleDot,
   Cuboid,
-  Eye,
   Grid3X3,
   Layers3,
   Maximize2,
@@ -18,6 +17,7 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { useWorkspaceStore, type ViewMode } from './useWorkspaceStore'
+import { ThreeViewport } from './geometry/ThreeViewport'
 import './App.css'
 
 type HealthState = 'checking' | 'online' | 'offline'
@@ -175,14 +175,7 @@ function Metric({ label, value, unit }: { label: string; value: string; unit: st
 }
 
 function Viewport({ showGrid, viewMode }: { showGrid: boolean; viewMode: ViewMode }) {
-  return <div className={`viewport-card mode-${viewMode}`}>
-    {showGrid && <div className="viewport-grid" aria-hidden="true" />}
-    <div className="viewport-atmosphere" aria-hidden="true" />
-    <div className="viewport-toolbar"><span className="viewport-kicker"><Eye size={13} /> Preview</span><span className="viewport-status">Parametric bracket · A-001</span></div>
-    <div className="bracket-placeholder" aria-hidden="true"><div className="bracket-arm bracket-arm-top" /><div className="bracket-arm bracket-arm-bottom" /><div className="bracket-web" /><span className="hole hole-top" /><span className="hole hole-bottom" /><span className="lattice-glow lattice-glow-one" /><span className="lattice-glow lattice-glow-two" /></div>
-    <div className="viewport-caption"><span className="axis-gizmo"><b>X</b><b>Y</b><b>Z</b></span><span>3D viewport · geometry preview</span></div>
-    <div className="viewport-crosshair" aria-hidden="true"><span /><span /></div>
-  </div>
+  return <ThreeViewport showGrid={showGrid} viewMode={viewMode} />
 }
 
 export default App

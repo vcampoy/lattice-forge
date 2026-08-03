@@ -1,6 +1,6 @@
 # Business model
 
-Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype currently validates the calculation and API foundation; the full visual design experience remains planned.
+Lattice Forge is a product concept for explaining Design for Additive Manufacturing tradeoffs through an interactive bracket-design workflow. The implemented prototype now combines a deterministic analysis API with a procedural, inspectable Three.js bracket viewport; manufacturing optimization and analysis integration remain planned.
 
 ## Problem
 
@@ -36,9 +36,9 @@ Today, the implemented value is narrower:
 - early warnings for minimum wall thickness; and
 - an API boundary that can support a future visual workflow.
 
-### Phase 02 experience signal
+### Phase 02-03 experience signal
 
-The workspace shell now makes the intended product narrative visible in one screen: geometry controls on the left, an engineering viewport in the centre, and manufacturing outcomes on the right. Empty metrics intentionally read as “Awaiting analysis” with em dashes, so the interface communicates the future workflow without presenting fabricated results. This is an experience and comprehension improvement only; it does not change the business model, target users, or pricing assumptions.
+The workspace now makes the intended product narrative visible in one screen: geometry controls on the left, an interactive mechanical bracket viewport in the centre, and manufacturing outcomes on the right. A WebGL fallback preserves the surrounding workflow on unsupported browsers. Empty metrics intentionally remain pending, so the interface communicates the future workflow without presenting fabricated results. This improves early design comprehension but does not change pricing assumptions.
 
 ## Primary workflow
 
@@ -51,7 +51,7 @@ The intended workflow is:
 5. Review warnings and the illustrative-estimate disclaimer.
 6. Save or export the concept for further work.
 
-**Implemented today:** API health, material discovery, analysis calculation, and the phase 02 workspace shell. Steps 1 and 4–6, plus UI integration for steps 2–3, remain planned; phase 02 controls are presentational until the Three.js scene and analysis integration are added.
+**Implemented today:** API health, material discovery, analysis calculation, the responsive workspace shell, and an interactive default parametric bracket viewport with orbit/reset controls. Steps 2?6 remain incomplete as a product workflow: controls are not yet connected to geometry, and analysis, lattice reveal, persistence, and export are not integrated.
 
 ## Business assumptions
 

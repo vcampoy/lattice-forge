@@ -20,7 +20,7 @@ The development client runs on `http://localhost:5173` and proxies `/api` reques
 
 | Component | Responsibility | Current technology |
 |---|---|---|
-| Web client | Render the responsive manufacturing workspace shell and report API availability | React 19, TypeScript, Vite 8, CSS, Lucide React, Zustand |
+| Web client | Render the responsive manufacturing workspace, Three.js bracket viewport, and report API availability | React 19, TypeScript, Vite 8, React Three Fiber, Three.js, Drei, CSS, Lucide React, Zustand |
 | Minimal API | Expose health, material, and analysis contracts | ASP.NET Core on .NET 10 |
 | Material catalogue | Supply one deterministic example material per manufacturing process | In-memory static catalogue |
 | Analysis service | Validate requests and calculate illustrative metrics | Stateless C# domain service |
@@ -186,13 +186,21 @@ npm run build
 
 Frontend component tests are implemented in phase 02. They run in jsdom through Vitest and Testing Library, and currently protect major workspace regions, accessible names, and explicit empty analysis states.
 
-## Frontend workspace shell (phase 02)
+## Frontend workspace shell (phases 02-03)
 
-The client now presents a responsive industrial workspace without a Three.js scene or live analysis controls. `App.tsx` keeps the page regions explicit: header and API status, design controls, viewport placeholder, manufacturing analysis, and viewport toolbar. The UI state boundary is `useWorkspaceStore.ts`; it owns only view mode and grid visibility until geometry state is introduced in a later phase.
+The client presents a responsive industrial workspace with explicit page regions: header and API status, design controls, a Three.js viewport, manufacturing analysis, and viewport toolbar. The UI state boundary is `useWorkspaceStore.ts`; it still owns only view mode and grid visibility. Geometry parameters remain phase-03 defaults until the controls are connected in phase 04.
 
-The shell uses semantic headings, labelled controls, live API status, visible focus rings, and responsive layouts down to 560px. Lucide icons are inline SVG components, so this phase has no external runtime assets. The viewport atmosphere and technical grid are CSS-only placeholders and are deliberately not a substitute for the planned Three.js scene.
+The shell uses semantic headings, labelled controls, live API status, visible focus rings, and responsive layouts down to 560px. Lucide icons are inline SVG components. The central viewport now uses React Three Fiber and procedural Three.js resources, with a CSS fallback when WebGL is unavailable.
 
-Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. They run in jsdom through Vitest and Testing Library. `npm test`, `npm run build`, and `npm run lint` are the current frontend checks.
+Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. `geometryParameters.test.ts` protects pure normalization before values reach Three.js. They run in jsdom through Vitest and Testing Library. `npm test`, `npm run build`, and `npm run lint` are the current frontend checks.
+
+## Three.js viewport (phase 03)
+
+`ThreeViewport.tsx` owns the Canvas boundary, WebGL capability fallback, DPR cap, camera labels, and reset action. `BracketScene.tsx` owns camera, constrained damped `OrbitControls`, procedural studio lights, contact shadows, and the optional floor grid. `BracketGeometry.tsx` owns the generated mechanical silhouette and its GPU resources.
+
+The scene scale is **1 world unit = 1 millimetre**. `normalizeBracketParameters` clamps non-finite or unsafe values before they reach `Shape` and `ExtrudeGeometry`. The bracket is an extruded XY silhouette with two `Shape.holes` mounting holes and bevelled edges. Titanium-like `MeshPhysicalMaterial` and restrained cyan `Edges` provide the visual treatment; pointer hover and click update material feedback without rebuilding geometry.
+
+Geometry and material instances are memoized by geometry parameters and disposed on replacement or unmount. No render-loop allocations are introduced. The Canvas caps device pixel ratio at 1.75 and uses only local procedural lighting; no HDR or remote runtime asset is required. A narrow or unavailable WebGL context leaves the surrounding design and analysis panels usable.
 
 ## Current constraints
 
@@ -201,15 +209,14 @@ Frontend component tests in `App.test.tsx` verify accessible region names and ex
 - Validation exceptions are translated at the HTTP boundary; there is no richer domain error model yet.
 - Authentication, authorization, observability, rate limiting, and production deployment are outside the demo's current scope.
 - The web client calls only the health endpoint today. Material and analysis endpoints are not yet connected to the UI.
-- Design controls are presentational in phase 02; they do not yet drive analysis or geometry.
+- Design controls are presentational through phase 03; they do not yet drive analysis or geometry.
 
 ## Planned, not implemented
 
 The following capabilities appear in the build plan but **do not exist in the current application**:
 
-- a Three.js or React Three Fiber scene;
-- parametric controls and shared Zustand state;
-- procedural bracket geometry, lattice, comparison mode, or heatmap;
+- live parametric controls and shared geometry state;
+- lattice reveal, comparison mode, or heatmap;
 - live manufacturing-analysis integration in the UI;
 - optimization animation;
 - SQLite persistence and STL export;
