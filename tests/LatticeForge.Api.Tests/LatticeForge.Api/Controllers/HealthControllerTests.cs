@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
+using LatticeForge.UseCase.Health.GetHealthUseCase.Dtos;
 
 namespace LatticeForge.Api.Tests.LatticeForge.Api.Controllers;
 
@@ -19,7 +20,7 @@ public sealed class HealthControllerTests : IClassFixture<IsolatedWebApplication
         HttpResponseMessage response = await _client.GetAsync("/api/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        HealthResponse? payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
+        GetHealthResponse? payload = await response.Content.ReadFromJsonAsync<GetHealthResponse>();
         Assert.NotNull(payload);
         Assert.Equal("ok", payload.Status);
         Assert.Equal("Lattice Forge API", payload.Service);

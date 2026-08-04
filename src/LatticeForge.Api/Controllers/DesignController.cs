@@ -1,6 +1,9 @@
-using LatticeForge.Api.Designs;
-using LatticeForge.Domain.Designs;
-using LatticeForge.UseCase.Designs;
+using LatticeForge.UseCase.Designs.CreateDesignUseCase;
+using LatticeForge.UseCase.Designs.CreateDesignUseCase.Dtos;
+using LatticeForge.UseCase.Designs.GetDesignUseCase;
+using LatticeForge.UseCase.Designs.GetDesignUseCase.Dtos;
+using LatticeForge.UseCase.Designs.GetDesignsUseCase;
+using LatticeForge.UseCase.Designs.GetDesignsUseCase.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LatticeForge.Api.Controllers;
@@ -8,19 +11,21 @@ namespace LatticeForge.Api.Controllers;
 [ApiController]
 [Route("api/designs")]
 public sealed class DesignController(
-    IDesignUseCase useCase) : ControllerBase
+    ICreateDesignUseCase createDesign,
+    IGetDesignsUseCase getDesigns,
+    IGetDesignUseCase getDesign) : ControllerBase
 {
     [HttpPost(Name = "CreateDesign")]
-    [ProducesResponseType(typeof(SavedDesign), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreateDesignResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<SavedDesign>> CreateDesign(
-        [FromBody] DesignRequest request,
+    public async Task<ActionResult<CreateDesignResponse>> CreateDesign(
+        [FromBody] CreateDesignRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            SavedDesign design = await useCase.CreateAsync(request.ToCommand(), cancellationToken);
-            return Created($"/api/designs/{design.Id}", design);
+            CreateDesignResponse response = await createDesign.ExecuteAsync(request, cancellationToken);
+            return Created($"/api/designs/{response.Id}", response);
         }
         catch (ArgumentException exception)
         {
@@ -29,15 +34,17 @@ public sealed class DesignController(
     }
 
     [HttpGet(Name = "GetDesigns")]
-    [ProducesResponseType(typeof(IReadOnlyList<SavedDesign>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyList<GetDesignsResponse.DesignDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IReadOnlyList<SavedDesign>>> GetDesigns(
+    public async Task<ActionResult<IReadOnlyList<GetDesignsResponse.DesignDto>>> GetDesigns(
         CancellationToken cancellationToken)
     {
         try
         {
-            IReadOnlyList<SavedDesign> designs = await useCase.ListAsync(cancellationToken);
-            return Ok(designs);
+            GetDesignsResponse response = await getDesigns.ExecuteAsync(
+                new GetDesignsRequest(),
+                cancellationToken);
+            return Ok(response.Designs);
         }
         catch (ArgumentException exception)
         {
@@ -46,17 +53,19 @@ public sealed class DesignController(
     }
 
     [HttpGet("{id:guid}", Name = "GetDesign")]
-    [ProducesResponseType(typeof(SavedDesign), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetDesignResponse.DesignDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<SavedDesign>> GetDesign(
+    public async Task<ActionResult<GetDesignResponse.DesignDto>> GetDesign(
         Guid id,
         CancellationToken cancellationToken)
     {
         try
         {
-            SavedDesign? design = await useCase.GetAsync(id, cancellationToken);
-            return design is null ? NotFound() : Ok(design);
+            GetDesignResponse? response = await getDesign.ExecuteAsync(
+                new GetDesignRequest(id),
+                cancellationToken);
+            return response is null ? NotFound() : Ok(response.Design);
         }
         catch (ArgumentException exception)
         {

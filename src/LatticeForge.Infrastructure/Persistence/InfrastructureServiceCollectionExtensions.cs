@@ -1,4 +1,3 @@
-using LatticeForge.Services.Designs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +10,6 @@ public static class InfrastructureServiceCollectionExtensions
         string designConnection)
     {
         services.AddDbContext<DesignDbContext>(options => options.UseSqlite(designConnection));
-        services.AddScoped<IDesignRepository, DesignRepository>();
         return services;
     }
 

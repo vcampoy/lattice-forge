@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LatticeForge.Domain\LatticeForge.Domain.csproj" />
-    <ProjectReference Include="..\LatticeForge.Services\LatticeForge.Services.csproj" />
   </ItemGroup>
 
 </Project>

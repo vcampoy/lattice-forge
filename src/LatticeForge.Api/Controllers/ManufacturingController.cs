@@ -1,6 +1,8 @@
-using LatticeForge.Api.Manufacturing;
 using LatticeForge.Domain.Manufacturing;
-using LatticeForge.UseCase.Manufacturing;
+using LatticeForge.UseCase.Manufacturing.AnalyzeMaterialsUseCase;
+using LatticeForge.UseCase.Manufacturing.AnalyzeMaterialsUseCase.Dtos;
+using LatticeForge.UseCase.Manufacturing.GetMaterialsUseCase;
+using LatticeForge.UseCase.Manufacturing.GetMaterialsUseCase.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LatticeForge.Api.Controllers;
@@ -8,26 +10,24 @@ namespace LatticeForge.Api.Controllers;
 [ApiController]
 [Route("api")]
 public sealed class ManufacturingController(
-    IManufacturingUseCase useCase) : ControllerBase
+    IGetMaterialsUseCase getMaterials,
+    IAnalyzeMaterialsUseCase analyzeMaterials) : ControllerBase
 {
     [HttpGet("materials", Name = "GetMaterials")]
-    [ProducesResponseType(typeof(IReadOnlyList<MaterialProfile>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<MaterialProfile>> GetMaterials() =>
-        Ok(useCase.Materials);
+    [ProducesResponseType(typeof(IReadOnlyList<GetMaterialsResponse.MaterialDto>), StatusCodes.Status200OK)]
+    public ActionResult<IReadOnlyList<GetMaterialsResponse.MaterialDto>> GetMaterials() =>
+        Ok(getMaterials.Execute(new GetMaterialsRequest()).Materials);
 
     [HttpPost("analyses", Name = "CreateManufacturingAnalysis")]
-    [ProducesResponseType(typeof(ManufacturingAnalysis), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AnalyzeMaterialsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public ActionResult<ManufacturingAnalysis> CreateManufacturingAnalysis(
-        [FromBody] AnalysisRequest request)
+    public ActionResult<AnalyzeMaterialsResponse> CreateManufacturingAnalysis(
+        [FromBody] AnalyzeMaterialsRequest request)
     {
         try
         {
-            ManufacturingAnalysis analysis = useCase.Analyze(
-                request.Parameters,
-                request.MaterialId,
-                request.Process);
-            return Ok(analysis);
+            AnalyzeMaterialsResponse response = analyzeMaterials.Execute(request);
+            return Ok(response);
         }
         catch (ArgumentException exception)
         {

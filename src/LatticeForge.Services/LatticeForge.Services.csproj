@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LatticeForge.Domain\LatticeForge.Domain.csproj" />
+    <ProjectReference Include="..\LatticeForge.Infrastructure\LatticeForge.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

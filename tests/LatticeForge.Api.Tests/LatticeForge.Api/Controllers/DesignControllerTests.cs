@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using LatticeForge.Api.Designs;
+using LatticeForge.Domain.Entities;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
 using LatticeForge.Domain.Manufacturing;
 using LatticeForge.Infrastructure.Persistence;
+using LatticeForge.UseCase.Designs.CreateDesignUseCase.Dtos;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,7 +34,7 @@ public sealed class DesignControllerTests
         "process",
         "schemaVersion"
     ];
-    private static readonly DesignRequest ValidRequest = new(
+    private static readonly CreateDesignRequest ValidRequest = new(
         "Bracket baseline",
         new BracketParameters(120, 80, 40, 4, 8, 0.5),
         "aluminum-sls",
@@ -104,7 +105,7 @@ public sealed class DesignControllerTests
     {
         using IsolatedWebApplicationFactory factory = CreateFactory();
         using HttpClient client = factory.CreateClient();
-        DesignRequest invalidRequest = ValidRequest with
+        CreateDesignRequest invalidRequest = ValidRequest with
         {
             Parameters = ValidRequest.Parameters with { WallThickness = 21 }
         };
