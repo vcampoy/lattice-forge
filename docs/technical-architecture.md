@@ -1,292 +1,216 @@
-﻿# Technical architecture
+# Technical architecture
 
-Lattice Forge currently provides a runnable React client and ASP.NET Core API for deterministic, illustrative additive-manufacturing analysis. The architecture is deliberately small: the browser owns presentation, the API owns manufacturing calculations, and automated tests protect the public behaviour.
+Lattice Forge is a React/Vite client backed by a controller-based ASP.NET Core API. The backend is split into Domain, UseCase, Services, Infrastructure, and API projects: dependencies point inward to Domain, while `src/LatticeForge.Api/Program.cs` composes the concrete runtime.
 
-## System context
+## System at a glance
 
 ```mermaid
 flowchart LR
-    User["Designer or reviewer"] --> Web["React + Vite web client"]
-    Web -->|"HTTP /api via Vite proxy"| Api["ASP.NET Core minimal API"]
-    Api --> Health["Health endpoint"]
-    Api --> Catalogue["In-memory material catalogue"]
-    Api --> Analysis["Manufacturing analysis service"]
-    Tests["xUnit integration and domain tests"] --> Api
+    User["Designer or reviewer"] --> Web["LatticeForge.Web<br/>React, Vite, Three.js"]
+    Web -->|"HTTP /api via Vite proxy"| Api["LatticeForge.Api<br/>Controllers; Program.cs composition root"]
+    Api --> UseCase["LatticeForge.UseCase<br/>Application workflows"]
+    UseCase --> Domain["LatticeForge.Domain<br/>Contracts and shared data"]
+    Api --> Services["LatticeForge.Services<br/>Concrete adapters"]
+    Services --> Infrastructure["LatticeForge.Infrastructure<br/>EF Core and SQLite"]
+    Services --> Domain
+    Infrastructure --> Domain
+    Infrastructure --> SQLite[("Local SQLite database")]
 ```
 
-The development client runs on `http://localhost:5173` and proxies `/api` requests to the API at `http://localhost:5100`. The proxy avoids enabling broad CORS for local development.
+The development client runs on `http://localhost:5173` and proxies `/api` to the API at `http://localhost:5100`. The web client is an independent JavaScript package; it is not a member of `LatticeForge.sln` and has no compile-time dependency on the .NET projects.
 
-## Implemented components
+## Project boundaries
 
-| Component | Responsibility | Current technology |
+| Project | Owns | Direct project dependencies |
 |---|---|---|
-| Web client | Render the responsive manufacturing workspace, Three.js bracket viewport, and report API availability | React 19, TypeScript, Vite 8, React Three Fiber, Three.js, Drei, CSS, Lucide React, Zustand |
-| Minimal API | Expose health, material, and analysis contracts | ASP.NET Core on .NET 10 |
-| Material catalogue | Supply one deterministic example material per manufacturing process | In-memory static catalogue |
-| Analysis service | Validate requests and calculate illustrative metrics | Stateless C# domain service |
-| API tests | Verify domain rules and HTTP contracts | xUnit and `WebApplicationFactory` |
+| `LatticeForge.Domain` | Domain DTOs, `DesignEntity`, repository contract, and time-provider abstraction | None |
+| `LatticeForge.UseCase` | Application workflows, request/response DTOs, validation, catalogue, and deterministic manufacturing calculations | Domain |
+| `LatticeForge.Infrastructure` | `DesignDbContext`, EF Core model configuration, SQLite registration, and demo database initialization | Domain |
+| `LatticeForge.Services` | EF Core-backed `DesignRepository`, entity-to-domain mapping, and the system UTC clock | Domain, Infrastructure |
+| `LatticeForge.Api` | Controllers, JSON/Problem Details configuration, dependency injection, and startup composition | Domain, UseCase, Services, Infrastructure |
+| `LatticeForge.Web` | Browser state, HTTP clients, accessible workspace UI, Three.js scene, persistence controls, and exports | HTTP contracts only |
+| `LatticeForge.Api.Tests` | Backend unit, controller, host, and SQLite integration tests | All five .NET production projects |
 
-## Solution layout
+The source dependency graph is acyclic. `src/LatticeForge.Api/Program.cs` is the composition root: inner projects do not register themselves against API concerns, and `LatticeForge.UseCase` depends only on `LatticeForge.Domain`.
+
+```mermaid
+flowchart BT
+    Domain["Domain"]
+    UseCase["UseCase"] --> Domain
+    Infrastructure["Infrastructure"] --> Domain
+    Services["Services"] --> Domain
+    Services --> Infrastructure
+    Api["Api / Program.cs composition root"] --> Domain
+    Api --> UseCase
+    Api --> Services
+    Api --> Infrastructure
+    Tests["Api.Tests"] -.-> Api
+    Tests -.-> UseCase
+    Tests -.-> Services
+    Tests -.-> Infrastructure
+    Tests -.-> Domain
+```
+
+## Backend organization
+
+### Domain contracts
+
+`LatticeForge.Domain` contains data and abstractions shared across the backend:
 
 ```text
-LatticeForge.sln
-src/
-  LatticeForge.Api/
-    Manufacturing/          # Domain records, catalogue, and analysis service
-    Program.cs              # Dependency registration and minimal API endpoints
-  LatticeForge.Web/
-    src/                    # React foundation UI and styles
-tests/
-  LatticeForge.Api.Tests/   # Domain and endpoint tests
-docs/                       # Living technical and business documentation
+Dtos/
+  Designs/SavedDesign.cs
+  Manufacturing/
+    BracketParameters.cs
+    ManufacturingAnalysis.cs
+    ManufacturingProcess.cs
+    MaterialProfile.cs
+Entities/DesignEntity.cs
+Repositories/IDesignRepository.cs
+Services/IDateTimeProvider.cs
 ```
 
-`ManufacturingAnalysisService` contains the calculations. Endpoints translate successful results or domain validation failures into HTTP responses; they do not contain manufacturing equations.
+The namespaces follow the folders: design snapshots use `LatticeForge.Domain.Dtos.Designs`, while manufacturing records and enums use `LatticeForge.Domain.Dtos.Manufacturing`. `IDesignRepository` exposes create, list, and get operations without referencing EF Core. `IDateTimeProvider.GetDateTimeNow()` makes creation timestamps controllable in tests.
+
+### Use cases
+
+Each application workflow has a feature folder and namespace that names the action without a redundant `UseCase` folder suffix. The implementation class keeps the `UseCase` role in its name, has no `Impl` suffix, and implements an `I*UseCase` interface in the same feature file.
+
+| Feature folder and namespace | Interface | Implementation |
+|---|---|---|
+| `Designs/CreateDesign` | `ICreateDesignUseCase` | `CreateDesignUseCase` |
+| `Designs/GetDesign` | `IGetDesignUseCase` | `GetDesignUseCase` |
+| `Designs/GetDesigns` | `IGetDesignsUseCase` | `GetDesignsUseCase` |
+| `Health/GetHealth` | `IGetHealthUseCase` | `GetHealthUseCase` |
+| `Manufacturing/AnalyzeMaterials` | `IAnalyzeMaterialsUseCase` | `AnalyzeMaterialsUseCase` |
+| `Manufacturing/GetMaterials` | `IGetMaterialsUseCase` | `GetMaterialsUseCase` |
+
+Feature-specific HTTP-facing request and response records live under each feature's `Dtos` namespace. Shared validation, catalogue, and calculation helpers live under `Designs/Helpers` or `Manufacturing/Helpers` rather than in controllers.
+
+`CreateDesignUseCase` validates the command, asks `IDateTimeProvider` for the current time once, and uses that value for both `CreatedAt` and `UpdatedAt`. The other design workflows validate restored snapshots before returning them; the list workflow orders designs by update time and then creation time, newest first.
+
+### Services and persistence
+
+`LatticeForge.Services` contains concrete adapters:
+
+- `Repositories/DesignRepository.cs` implements `IDesignRepository` over `DesignDbContext`.
+- `Mappers/DesignMapper.cs` publicly maps `DesignEntity` to `SavedDesign`; the inverse mapping remains private to the repository.
+- `DateTimeProvider.cs` implements `IDateTimeProvider` and is the only production location that reads `DateTimeOffset.UtcNow`.
+
+`LatticeForge.Infrastructure` owns `DesignDbContext`, its EF Core model configuration, SQLite provider registration, and database bootstrap. `Persistence/DesignDbContext.cs` exposes the designs set and configures keys, required strings, enum conversion, lengths, and the update-time index. `InfrastructureServiceCollectionExtensions` registers the SQLite context and calls `Database.EnsureCreated()` during API startup. `LatticeForge.Services` owns the EF Core-backed `DesignRepository` adapter that consumes this context and executes persistence queries.
+
+`EnsureCreated()` is intentional for a disposable local demo. It is not a migration or production schema-evolution strategy; reviewed EF Core migrations, deployment controls, backups, concurrency, authentication, and authorization remain outside the current scope.
+
+### Composition root and request flow
+
+`src/LatticeForge.Api/Program.cs` registers:
+
+- all six use-case interfaces as scoped services;
+- `IDesignRepository -> DesignRepository` as scoped;
+- `IDateTimeProvider -> DateTimeProvider` as singleton;
+- `DesignDbContext` through `AddLatticeForgeInfrastructure`; and
+- controllers, string-enum JSON serialization, and Problem Details.
+
+Controllers depend on use-case interfaces, not concrete implementations. A persisted-design request follows this path:
+
+```mermaid
+sequenceDiagram
+    participant Web as Web client
+    participant Controller as API controller
+    participant UseCase as I*UseCase
+    participant Repository as DesignRepository / IDesignRepository
+    participant Db as DesignDbContext / SQLite
+
+    Web->>Controller: HTTP /api/designs
+    Controller->>UseCase: ExecuteAsync(request)
+    UseCase->>Repository: Create/List/Get
+    Repository->>Db: EF Core query or save
+    Db-->>Repository: DesignEntity
+    Repository-->>UseCase: SavedDesign
+    UseCase-->>Controller: Response DTO
+    Controller-->>Web: JSON or Problem Details
+```
+
+Health, catalogue, and analysis workflows stop in the UseCase layer because they do not require persistence. Controllers translate successful results and `ArgumentException` validation failures into HTTP responses; they do not contain manufacturing equations.
 
 ## HTTP API
 
-All successful JSON responses use camel-case property names. `ManufacturingProcess` values are serialized as strings.
+Successful JSON uses camel-case properties, and `ManufacturingProcess` values are serialized as strings.
 
-### `GET /api/health`
+| Method | Route | Use case | Success | Relevant failure |
+|---|---|---|---|---|
+| `GET` | `/api/health` | `IGetHealthUseCase` | `200` health record | - |
+| `GET` | `/api/materials` | `IGetMaterialsUseCase` | `200` material array | - |
+| `POST` | `/api/analyses` | `IAnalyzeMaterialsUseCase` | `200` analysis | `400` Problem Details |
+| `POST` | `/api/designs` | `ICreateDesignUseCase` | `201` saved design | `400` Problem Details |
+| `GET` | `/api/designs` | `IGetDesignsUseCase` | `200` design array | `400` for invalid stored data |
+| `GET` | `/api/designs/{id}` | `IGetDesignUseCase` | `200` saved design | `404`, or `400` for invalid stored data |
 
-Returns API availability.
+The frontend centralizes these paths in `src/LatticeForge.Web/src/apiClient.ts`. Vite forwards the same `/api` paths during local development, so the browser contract is unchanged by the backend project split.
 
-```json
-{
-  "status": "ok",
-  "service": "Lattice Forge API"
-}
-```
+## Manufacturing contract
 
-### `GET /api/materials`
-
-Returns a deterministic array of material profiles. A material contains:
-
-| Field | Meaning | Unit |
-|---|---|---|
-| `id`, `name` | Stable identifier and display name | â€” |
-| `process` | `Sls`, `Sla`, or `MetalLpbf` | â€” |
-| `density` | Material density used for weight | g/cmÂ³ |
-| `costPerKg` | Illustrative material price | EUR/kg |
-| `minimumWallThickness` | Warning threshold | mm |
-| `depositionRate` | Simplified production rate | cmÂ³/min |
-
-The catalogue currently contains `aluminum-sls`, `resin-sla`, and `titanium-lpbf`. These are demo profiles, not procurement or machine specifications.
-
-### `POST /api/analyses`
-
-Accepts the selected material and process plus bracket geometry:
-
-```json
-{
-  "parameters": {
-    "length": 120,
-    "height": 80,
-    "depth": 40,
-    "wallThickness": 4,
-    "holeRadius": 8,
-    "latticeDensity": 0.5
-  },
-  "materialId": "aluminum-sls",
-  "process": "Sls"
-}
-```
-
-Dimensions are millimetres. `latticeDensity` is a normalized value from `0` to `1`.
-
-A successful response contains:
-
-| Field | Unit or type |
-|---|---|
-| `solidVolume`, `optimizedVolume` | cmÂ³ |
-| `estimatedWeight` | g |
-| `estimatedCost` | EUR |
-| `estimatedPrintMinutes` | min |
-| `materialReductionPercent` | % |
-| `printabilityScore` | integer, 0â€“100 |
-| `supportRisk` | `Low`, `Medium`, or `High` |
-| `warnings` | array of explanatory strings |
-| `illustrativeEstimate` | always `true` in the current implementation |
-
-Invalid requests return RFC 9457-style `application/problem+json` with HTTP 400, a stable title, and a specific validation detail.
-
-## Manufacturing model
-
-The model is deterministic and intentionally simplified. It supports product interaction and architectural demonstration; it does not simulate a machine or certify a design.
-
-Let:
-
-- `L`, `H`, and `D` be length, height, and depth in millimetres;
-- `T` be wall thickness in millimetres;
-- `R` be hole radius in millimetres; and
-- `Q` be normalized lattice density in `[0, 1]`.
-
-The current equations are:
+Analysis accepts bracket geometry, a material identifier, and a process. Dimensions are millimetres and lattice density is normalized to `[0, 1]` on the API contract. Material density is `g/cm^3`, cost is `EUR/kg`, and deposition rate is the illustrative `cm^3/min` input.
 
 ```text
-wallFactor = 0.22 + clamp(T / 20, 0, 1) Ã— 0.08
-envelopeMmÂ³ = L Ã— H Ã— D Ã— wallFactor
-holesMmÂ³ = Ï€ Ã— RÂ² Ã— D Ã— 2 Ã— 0.9
-solidVolumeCmÂ³ = max(0.001, (envelopeMmÂ³ - holesMmÂ³) / 1000)
-
-optimizedVolumeCmÂ³ = solidVolumeCmÂ³ Ã— (0.30 + Q Ã— 0.45)
-estimatedWeightG = optimizedVolumeCmÂ³ Ã— densityGPerCmÂ³
-estimatedCostEur = estimatedWeightG / 1000 Ã— costPerKg
-estimatedPrintMinutes = max(1, optimizedVolumeCmÂ³ / depositionRateCmÂ³PerMin)
-materialReductionPercent = clamp((1 - optimizedVolumeCmÂ³ / solidVolumeCmÂ³) Ã— 100, 0, 100)
+wallFactor = 0.22 + clamp(wallThickness / 20, 0, 1) * 0.08
+envelopeMm3 = length * height * depth * wallFactor
+holesMm3 = pi * holeRadius^2 * depth * 2 * 0.9
+solidVolumeCm3 = max(0.001, (envelopeMm3 - holesMm3) / 1000)
+optimizedVolumeCm3 = solidVolumeCm3 * (0.30 + latticeDensity * 0.45)
+estimatedWeightG = optimizedVolumeCm3 * densityGPerCm3
+estimatedCostEur = estimatedWeightG / 1000 * costPerKg
+estimatedPrintMinutes = max(1, optimizedVolumeCm3 / depositionRateCm3PerMinute)
+materialReductionPercent = clamp((1 - optimizedVolumeCm3 / solidVolumeCm3) * 100, 0, 100)
 ```
 
-The printability score combines wall-thickness adequacy, distance from a mid-density target, and a normalized hole-size factor. The score is clamped to `0â€“100`; risk is Low at 80 or above, Medium from 55 to 79, and High below 55. Values are rounded only when the result record is created.
+`ManufacturingAnalysisHelper` owns these deterministic equations. `ManufacturingValidationHelper` rejects non-finite or out-of-range dimensions, invalid wall thickness or hole radius, lattice density outside `[0, 1]`, unknown material IDs, and incompatible material/process combinations. A wall below the selected material's minimum produces a warning rather than rejection. Results remain illustrative and do not certify a design.
 
-### Model properties protected by tests
+## Frontend architecture
 
-- identical input produces identical output;
-- increasing lattice density increases optimized volume;
-- increasing wall thickness increases weight for the tested valid range;
-- printability remains between 0 and 100; and
-- optimized volume remains lower than solid volume for valid density values.
+`LatticeForge.Web` is the only JavaScript package and uses pnpm 10.33.1 with a package-local `pnpm-lock.yaml`. React and Zustand own application state; React Three Fiber owns the declarative canvas boundary; focused geometry modules use direct Three.js APIs for shapes, instancing, clipping, materials, and disposal.
 
-## Validation
+The typed browser clients separate transport from presentation:
 
-The service rejects:
+- `manufacturingApi.ts` calls `/api/analyses`; `useManufacturingAnalysis.ts` debounces requests, aborts stale work, and exposes explicit states.
+- `designPersistence.ts` calls the design endpoints and owns typed persistence/export helpers.
+- `DesignPersistenceControls.tsx` owns the accessible save/recent-design interaction without changing the camera or view state.
 
-- length, height, or depth outside `(0, 1000]` mm;
-- wall thickness that is non-positive or does not fit within half the smallest bracket dimension;
-- hole radius that is non-positive or does not fit within half the smaller face dimension;
-- lattice density outside `[0, 1]`;
-- unknown material identifiers; and
-- material/process combinations that do not match.
+The conceptual lattice uses one bounded `InstancedMesh`; rendering budgets cap device pixel ratio and instance count. The optimization scan and risk heatmap are presentation-only and never replace API-authoritative manufacturing metrics. STL and JSON exports remain conceptual demo outputs, not validated manufacturing artefacts.
 
-Wall thickness below the material profile's minimum is accepted with a warning rather than rejected. This supports exploration while making the risk visible.
+## Testing strategy
 
-## Testing and TDD
+Backend tests live in `tests/LatticeForge.Api.Tests` and use xUnit:
 
-Changes follow Redâ€“Greenâ€“Refactor. Tests are written and observed failing for the intended reason before the smallest production change is made. The relevant suite is rerun after refactoring.
+- use-case tests protect validation, deterministic calculations, ordering, and response mapping;
+- controller tests protect routes, status codes, JSON-facing contracts, and Problem Details;
+- `WebApplicationFactory` tests run the composed host with isolated SQLite storage;
+- repository tests exercise EF Core/SQLite round trips and entity mapping; and
+- clock tests verify UTC behavior while create-design tests inject a fixed `IDateTimeProvider`.
 
-Current coverage includes:
+Frontend tests are colocated with source and run in jsdom through Vitest and Testing Library. They cover stores, HTTP contracts and cancellation, persistence, controls, exports, geometry normalization, lattice bounds, rendering budgets, optimization, and accessible states.
 
-- one health endpoint integration test;
-- deterministic analysis and domain validation tests;
-- monotonicity and score-bound tests; and
-- material and analysis endpoint integration tests, including Problem Details.
-
-Run the backend verification from the repository root:
+Run the maintained checks with:
 
 ```powershell
+# Repository root
 dotnet build LatticeForge.sln
 dotnet test LatticeForge.sln --no-build
-```
 
-Run the current frontend build from `src/LatticeForge.Web`:
-
-```powershell
+# src/LatticeForge.Web
 pnpm install --frozen-lockfile
+pnpm test
 pnpm build
+pnpm lint
 ```
 
-Frontend component tests are implemented in phase 02. They run in jsdom through Vitest and Testing Library, and currently protect major workspace regions, accessible names, and explicit empty analysis states.
+The automated frontend suite does not provide a real browser, GPU, or device matrix. WebGL context recovery, screen-reader output, responsive visual breakpoints, and the raw pointer-oriented orbit interaction still require manual browser/device verification. There is no end-to-end browser suite or production database migration test.
 
-## Frontend workspace shell (phases 02-03)
-
-The client presents a responsive industrial workspace with explicit page regions: header and API status, design controls, a Three.js viewport, manufacturing analysis, and viewport toolbar. The UI state boundary is `useWorkspaceStore.ts`; it still owns only view mode and grid visibility. Geometry parameters remain phase-03 defaults until the controls are connected in phase 04.
-
-The shell uses semantic headings, labelled controls, live API status, visible focus rings, and responsive layouts down to 560px. Lucide icons are inline SVG components. The central viewport now uses React Three Fiber and procedural Three.js resources, with a CSS fallback when WebGL is unavailable.
-
-Frontend component tests in `App.test.tsx` verify accessible region names and explicit empty analysis metrics. `geometryParameters.test.ts` protects pure normalization before values reach Three.js. They run in jsdom through Vitest and Testing Library. `pnpm test`, `pnpm build`, and `pnpm lint` are the current frontend checks.
-
-## Release review repairs (phase 11)
-
-The adversarial review confirmed four low-risk correctness issues plus one presentation defect and repaired them without redesigning the application:
-
-- `getBracketSilhouetteDimensions` clamps arm height and central web width below half of the bracket envelope. This prevents self-intersecting procedural silhouettes at the smallest supported dimensions and thickest UI wall setting before `ExtrudeGeometry` receives them.
-- `useManufacturingAnalysis` keys its effect by the serialized query contract instead of object identity. A caller that recreates an equivalent request object no longer restarts the debounce after each state update, while changed queries still abort stale requests and use the sequence guard.
-- Analysis state is cleared immediately when the design query changes, so stale metrics are not presented while the next authoritative response is pending.
-- Geometry normalization limits mounting-hole radius to the generated arm as well as the overall face, and export filename sanitization rejects Windows device names such as `CON` and `NUL`.
-- The viewport labels use ASCII separators (`/` and `x`) to avoid mojibake in the interview UI.
-
-The remaining lint warning is the pre-existing `react(only-export-components)` warning for the exported geometry factory in `BracketGeometry.tsx`; changing that module boundary would be broader than this targeted review.
-
-## Three.js viewport (phase 03)
-
-`ThreeViewport.tsx` owns the Canvas boundary, WebGL capability fallback, DPR cap, camera labels, and reset action. `BracketScene.tsx` owns camera, constrained damped `OrbitControls`, procedural studio lights, contact shadows, and the optional floor grid. `BracketGeometry.tsx` owns the generated mechanical silhouette and its GPU resources.
-
-The scene scale is **1 world unit = 1 millimetre**. `normalizeBracketParameters` clamps non-finite or unsafe values before they reach `Shape` and `ExtrudeGeometry`. The bracket is an extruded XY silhouette with two `Shape.holes` mounting holes and bevelled edges. Titanium-like `MeshPhysicalMaterial` and restrained cyan `Edges` provide the visual treatment; pointer hover and click update material feedback without rebuilding geometry.
-
-Geometry and material instances are memoized by geometry parameters and disposed on replacement or unmount. No render-loop allocations are introduced. The Canvas caps device pixel ratio at 1.5 on desktop and 1 on narrow screens, and uses only local procedural lighting; no HDR or remote runtime asset is required. A narrow or unavailable WebGL context leaves the surrounding design and analysis panels usable.
-
-
-## Parametric design controls (phase 04)
-
-`useDesignStore.ts` is the single browser-side source of truth for normalized length, height, depth, wall thickness, hole radius, lattice density, process, material, and view selections. `normalizeBracketParameters` clamps geometry before it reaches Three.js; lattice density is clamped to 0â€“100%. Three named presets (Lightweight, Balanced, Reinforced) and Reset Design update the same state and expose a modified indicator relative to the active preset.
-
-`DesignControls.tsx` renders paired range and numeric inputs with explicit units, bounded steps, keyboard-operable native controls, and accessible labels/current values. Materials are loaded from `GET /api/materials`; the material select is filtered to the selected process and changing process chooses its compatible catalogue entry. If the API is unavailable, a small deterministic demo catalogue keeps the shell usable without pretending that analysis succeeded.
-
-`ThreeViewport` passes the current normalized dimensions through `BracketScene` to `BracketGeometry`, so all five geometric dimensions update the visible bracket while dragging. The viewport dimensions label is derived from the same state. Persistence and export are implemented in phase 08.
-
-## Lattice reveal and comparison (phase 05)
-
-`latticeStructure.ts` contains the pure deterministic lattice generator. It maps normalized 0–100 density to repeated diagonal pairs across bounded X/Y/Z cells. An explicit hard cap of `LATTICE_MAX_INSTANCES = 512` bounds GPU work; endpoints are inset by wall thickness from the bracket envelope. This is a conceptual lightweighting visualization, not a validated octet-truss or printable lattice.
-
-`LatticeStructureView.tsx` renders all struts through one Three.js `InstancedMesh`, reusing cylinder geometry and a cyan/titanium material. Matrices update only when parameters change; geometry and material are disposed on replacement or unmount. `useDesignStore.designViewMode` drives `solid`, `optimized`, and `compare`. Compare mode uses opposing local clipping planes and a luminous boundary; the viewport handle supports pointer dragging and arrow/Home/End keyboard input.
 ## Current constraints
 
-- The catalogue is compiled into the API; saved designs use a local SQLite database without authentication or multi-user administration.
-- The analysis service uses heuristic equations, not finite-element, thermal, slicing, support-generation, or machine-specific simulation.
-- Validation exceptions are translated at the HTTP boundary; there is no richer domain error model yet.
-- Authentication, authorization, observability, rate limiting, and production deployment are outside the demo's current scope.
-- The web client calls health, materials, and analysis endpoints; analysis results remain illustrative.
-- Design controls drive the local Three.js geometry and debounced API analysis; phase 08 adds local design persistence and demo exports.
-
-## Planned, not implemented
-
-The following capabilities appear in the build plan but **do not exist in the current application**:
-
-- engineering-grade manufacturing validation;
-- production deployment and observability;
-- broader frontend interaction and end-to-end coverage; and
-- production deployment or engineering-grade manufacturing validation.
-
-## Manufacturing-analysis integration (phase 06)
-
-`manufacturingApi.ts` owns the typed browser contract for `POST /api/analyses`; it serializes the normalized lattice density expected by the API and raises typed errors for HTTP failures. `useManufacturingAnalysis.ts` owns presentation-side orchestration: a 320 ms debounce, an `AbortController` per request, sequence checks, and explicit `idle`, `loading`, `success`, `validation`, `unavailable`, and `error` states. Cleanup aborts timers and in-flight work so rapid slider changes cannot let stale results overwrite the newest design.
-
-`ManufacturingAnalysisPanel.tsx` formats API-authoritative values only. It renders score, optimized weight, illustrative cost/time, material reduction, support risk, warnings, suggested corrections, and a compact Solid-versus-Optimized volume/weight comparison. The disclosure â€œIllustrative estimate â€” not engineering validationâ€ remains visible in every state. Numeric values use a CSS transition and disable motion under `prefers-reduced-motion`; no animation library or duplicate manufacturing equation is present in the client.
-
-Frontend tests cover debounce and cancellation, success, validation failure, unavailable/retry, and panel rendering. The 3D viewport remains independent: API failures update only the analysis panel and never unmount or replace the Three.js scene.
-
-Phase 06 supersedes the earlier planned note that analysis was not connected: design controls now drive both local geometry and debounced API analysis, while the API remains authoritative for all manufacturing equations. Optimization animation is implemented in phase 07; persistence and export are implemented in phase 08; engineering-grade validation remains out of scope.
-
-## Optimization scan and risk heatmap (phase 07)
-
-`optimizationSequence.ts` defines the presentation-only state machine for the controlled Optimize for Manufacturing sequence. `useOptimizationSequence.ts` owns cancellation, skip, reduced-motion completion, and the single-run guard; it never mutates domain design state.
-
-`heatmapRisk.ts` derives a deterministic risk value from surface orientation, process threshold, wall thickness, and view geometry. `RiskHeatmap.tsx` renders the reusable color ramp and an explicit text/pattern warning representation. `BracketScene.tsx` reuses the scan plane and clipping resources while the sequence reveals the lattice and transitions into Compare mode.
-
-The scan is resize-safe because its plane is derived from the current bracket bounds. API failures do not fabricate optimized metrics: the visual sequence may complete, while the analysis panel retains its error state. Engineering-grade validation remains planned.
-
-## Frontend package management
-
-The frontend is the repository's only JavaScript package and uses pnpm 10.33.1. Its lockfile lives at `src/LatticeForge.Web/pnpm-lock.yaml`; there is no root `package.json` and no `pnpm-workspace.yaml`. This keeps dependency resolution local to the web client without introducing workspace management overhead.
-
-## Design persistence and export (phase 08)
-
-The API stores DesignEntity records in SQLite and exposes POST /api/designs, GET /api/designs, and GET /api/designs/{id}. DesignService owns request validation, mapping, schema-version checks, and validation of restored rows through the same ManufacturingAnalysisService rules used by analysis. The local startup path uses Database.EnsureCreated() for deterministic demo bootstrap; production would require reviewed migrations and operational database management.
-
-The web client keeps persistence orchestration in DesignPersistenceControls.tsx and typed request/export helpers in designPersistence.ts. Save uses an accessible name dialog; Recent Designs loads and restores parameters without changing camera/view state. STL export builds a temporary optimized bracket+lattice scene, uses STLExporter, then disposes cloned geometry/material resources. JSON export includes schema version, selected process/material, parameters, and the illustrative-data disclaimer. Export filenames are reduced to safe ASCII filename characters and failures are shown as live status/error messages.
-
-The lattice STL is a conceptual demo mesh. The application does not claim watertightness, printability, engineering validation, or Materialise affiliation.
-
-## Responsiveness, accessibility, and performance hardening (phase 09)
-
-Phase 09 hardens the existing workspace without adding a product capability. Design Controls and Manufacturing Analysis can collapse independently on narrow layouts while the viewport remains present. Native controls retain accessible names, pressed/expanded state, visible focus, status announcements, dialog focus trapping, and error associations. The compare split remains keyboard-operable through arrows, Home, and End.
-
-ThreeViewport now derives a bounded rendering budget: desktop DPR is capped at 1.5, narrow layouts use DPR 1, lattice instances are capped at 512 on desktop and 256 on narrow layouts, and expensive shadows/contact shadows are disabled on narrow screens. Geometry, materials, clipping planes, and lattice instance matrices remain memoized or updated only when their inputs change. WebGL context loss/restoration events are surfaced without taking down the surrounding controls.
-
-The browser media query for prefers-reduced-motion is forwarded to OrbitControls and disables damping; CSS also removes decorative animation and transitions. Health, materials, WebGL, analysis, validation, loading, and offline states remain explicit. A real browser/device matrix is not automated in Vitest; manual checks remain required for WebGL context loss, screen-reader output, and the 1440x900, 1280x720, 1024x768, and 390px visual breakpoints.
-## Interview delivery and local operations (phase 10)
-
-Phase 10 adds no product capability. `README.md` is now the short reviewer entry point: it explains the product pitch, Mermaid architecture, setup commands, endpoint contract, domain equations and units, React Three Fiber/direct Three.js boundary, performance/accessibility decisions, tests, limitations, and genuine production gaps.
-
-`docs/INTERVIEW_SCRIPT.md` contains the 90-second demo narrative, five-minute technical walkthrough, evidence-based senior questions, and explicit one-day-demo tradeoffs. The root `start-dev.ps1` resolves absolute repository paths, validates the API/frontend prerequisites, launches `dotnet` and `pnpm` without visible helper windows, writes logs to the user temp directory, and stops both process trees when interrupted. The existing `scripts/start-backend.ps1` and `scripts/start-frontend.ps1` remain documented manual fallbacks.
-
-The launcher is intentionally local-development only. It does not provide production process supervision, deployment, authentication, or log rotation.
+- Manufacturing calculations are deterministic heuristics, not finite-element, thermal, slicing, support-generation, or machine-specific simulation.
+- The material catalogue is compiled into the UseCase project.
+- SQLite is local and uses `EnsureCreated`; the demo has no multi-user or operational data-management boundary.
+- Validation exceptions are translated at the controller boundary; there is no richer domain error model.
+- Authentication, authorization, observability, rate limiting, production deployment, and engineering-grade export validation are not implemented.
+- The lattice has not been verified for watertightness, structural performance, or printability.

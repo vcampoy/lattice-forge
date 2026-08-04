@@ -532,3 +532,37 @@ The phase tests cover creation, restart restoration, validation, corrupted rows,
 - `docs/technical-architecture.md`
 - `docs/business-model.md`
 - `docs/implementation-log.md`
+
+## Architecture documentation realignment
+
+### Audited state
+
+- Verified `LatticeForge.sln`, every `.csproj` project reference, source namespaces, API controllers and dependency registration, EF Core ownership, frontend API routes, and backend/frontend test layout.
+- Confirmed the acyclic backend graph: UseCase depends only on Domain; Infrastructure depends on Domain; Services depends on Domain and Infrastructure; API references and composes all four.
+- Confirmed that `LatticeForge.Web` is the only JavaScript package and communicates with the controller API only through the documented `/api` routes.
+
+### Documentation aligned
+
+- Replaced the obsolete minimal-API and `ManufacturingAnalysisService` architecture with the current controller, use-case, service-adapter, infrastructure, and composition-root boundaries.
+- Documented `Domain/Dtos`, `IDateTimeProvider`, the repository/mapper/clock adapters, all six renamed use-case features, and EF Core/SQLite ownership.
+- Consolidated the technical architecture around current behavior instead of retaining phase-by-phase descriptions that contradicted later implementation.
+- Updated the reviewer README diagram and interview walkthrough. No HTTP/JSON, product, frontend, calculation, or business-model behavior changed.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| Active architecture docs searched for obsolete namespaces, `*Impl`, minimal-API, and removed service names | Passed - no matches |
+| Required current paths, interfaces, implementations, composition root, and test boundaries searched in `docs/technical-architecture.md` | Passed |
+| Relative Markdown links in changed documents | Passed |
+| `git diff --check` for changed documentation | Passed |
+
+Runtime tests were not rerun because this work changed documentation only; the architecture was verified directly against source and project references.
+
+### Documentation changed
+
+- `README.md`
+- `docs/README.md`
+- `docs/technical-architecture.md`
+- `docs/INTERVIEW_SCRIPT.md`
+- `docs/implementation-log.md`

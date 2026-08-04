@@ -9,17 +9,21 @@ Lattice Forge is an interview-scale DfAM workspace: designers adjust a parametri
 ```mermaid
 flowchart LR
     Reviewer[Designer or reviewer] --> Web[React 19 + TypeScript + Vite]
-    Web -->|/api through Vite proxy| Api[ASP.NET Core Minimal API .NET 10]
-    Api --> Analysis[ManufacturingAnalysisService]
-    Api --> Catalogue[Static material catalogue]
-    Api --> SQLite[(Local SQLite designs)]
+    Web -->|/api through Vite proxy| Api[ASP.NET Core controller API .NET 10]
+    Api -->|composition root| UseCase[Use-case interfaces and implementations]
+    UseCase --> Domain[Domain contracts and DTOs]
+    Api --> Services[Service adapters]
+    Services --> Infrastructure[EF Core infrastructure]
+    Services --> Domain
+    Infrastructure --> Domain
+    Infrastructure --> SQLite[(Local SQLite designs)]
     Web --> Scene[React Three Fiber scene]
     Scene --> Three[Direct Three.js geometry and materials]
-    Tests[Vitest + xUnit] --> Web
-    Tests --> Api
+    Tests[Vitest + xUnit] -.-> Web
+    Tests -.-> Api
 ```
 
-The browser owns interaction and presentation. The API owns validation and manufacturing equations. The Vite development proxy keeps local setup simple without broad CORS configuration.
+The browser owns interaction and presentation. The .NET use-case layer owns validation and manufacturing equations; API controllers translate HTTP requests and failures. `src/LatticeForge.Api/Program.cs` is the composition root for use cases, service adapters, persistence infrastructure, and the injectable UTC clock. The Vite development proxy keeps local setup simple without broad CORS configuration.
 
 ## Run locally
 

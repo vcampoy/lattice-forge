@@ -22,9 +22,9 @@ The analysis hook creates a typed request, debounces changes, cancels stale fetc
 
 ### 3. Backend architecture
 
-The ASP.NET Core minimal API exposes health, material catalogue, analysis, and design persistence endpoints. `ManufacturingAnalysisService` is a stateless domain service. It validates `BracketParameters`, material/process compatibility, and finite numeric bounds before calculating the deterministic estimates. Endpoints translate domain failures to Problem Details instead of duplicating equations.
+`src/LatticeForge.Api/Program.cs` is the composition root for five backend projects. API controllers are inbound adapters that call six `I*UseCase` interfaces; the UseCase project depends only on Domain and owns validation, the material catalogue, and deterministic calculations. Shared records live under `Domain/Dtos`, while `IDesignRepository` and `IDateTimeProvider` keep application workflows independent of concrete persistence and system time.
 
-SQLite persistence stores versioned design snapshots. The local demo uses `EnsureCreated` at startup because it is easy to explain and deterministic for a one-day interview project. A production system would use reviewed migrations, a proper data boundary, backups, and concurrency/authorization decisions.
+Services supplies `DesignRepository`, `DesignMapper`, and `DateTimeProvider`; `DesignRepository` is the EF Core-backed adapter that depends on `DesignDbContext`. Infrastructure owns `DesignDbContext`, EF Core model configuration, SQLite registration, and database bootstrap. The adapter crosses that boundary without exposing EF Core to the use cases. The local demo uses `EnsureCreated` at startup because it is easy to explain and deterministic for a one-day interview project. A production system would use reviewed migrations, a proper data boundary, backups, and concurrency/authorization decisions.
 
 ### 4. Performance and accessibility
 
@@ -34,7 +34,7 @@ The non-canvas workflow uses native controls, visible focus, accessible names, s
 
 ### 5. Verification and honest tradeoffs
 
-The repository has xUnit tests for domain and HTTP contracts and Vitest/Testing Library tests for stores, API cancellation, persistence, geometry, optimization, controls, and exports. The normal verification commands are `dotnet build`, `dotnet test`, `pnpm test`, `pnpm build`, and `pnpm lint`.
+The repository has xUnit tests for use cases, controllers, the composed host, the clock, and isolated SQLite persistence. Vitest/Testing Library tests protect stores, API cancellation, persistence, geometry, optimization, controls, and exports. The normal verification commands are `dotnet build`, `dotnet test`, `pnpm test`, `pnpm build`, and `pnpm lint`.
 
 The biggest accepted shortcuts are heuristic manufacturing equations, a conceptual lattice, local SQLite, no full browser/device matrix, and a production bundle that still has a Vite chunk advisory. They are documented instead of hidden because a senior engineer should make the boundary explicit.
 
