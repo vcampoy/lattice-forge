@@ -8,12 +8,11 @@ using LatticeForge.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace LatticeForge.Api.Tests.LatticeForge.Api.Endpoints;
+namespace LatticeForge.Api.Tests.LatticeForge.Api.Controllers;
 
-public sealed class DesignEndpointsTests
+public sealed class DesignControllerTests
 {
     private const string BadRequestType = "https://www.rfc-editor.org/rfc/rfc9110#name-400-bad-request";
-    private static readonly string[] DatabaseFileSuffixes = [string.Empty, "-wal", "-shm"];
     private static readonly string[] ParametersPropertyNames =
     [
         "length",
@@ -22,14 +21,6 @@ public sealed class DesignEndpointsTests
         "wallThickness",
         "holeRadius",
         "latticeDensity"
-    ];
-    private static readonly string[] ProblemDetailsPropertyNames =
-    [
-        "type",
-        "title",
-        "status",
-        "detail",
-        "traceId"
     ];
     private static readonly string[] SavedDesignPropertyNames =
     [
@@ -50,7 +41,7 @@ public sealed class DesignEndpointsTests
         1);
 
     [Fact]
-    public async Task PostDesign_should_persist_design_and_return_created_when_request_is_valid()
+    public async Task CreateDesign_should_persist_design_and_return_created_when_request_is_valid()
     {
         using IsolatedWebApplicationFactory factory = CreateFactory();
         using HttpClient client = factory.CreateClient();
@@ -98,7 +89,18 @@ public sealed class DesignEndpointsTests
     }
 
     [Fact]
-    public async Task PostDesign_should_reject_invalid_parameters_when_analysis_validation_fails()
+    public async Task GetDesign_should_return_not_found_when_identifier_is_not_guid()
+    {
+        using IsolatedWebApplicationFactory factory = CreateFactory();
+        using HttpClient client = factory.CreateClient();
+
+        HttpResponseMessage response = await client.GetAsync("/api/designs/not-a-guid");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateDesign_should_reject_invalid_parameters_when_analysis_validation_fails()
     {
         using IsolatedWebApplicationFactory factory = CreateFactory();
         using HttpClient client = factory.CreateClient();
@@ -116,7 +118,7 @@ public sealed class DesignEndpointsTests
     }
 
     [Fact]
-    public async Task PostDesign_should_reject_blank_name_when_request_is_invalid()
+    public async Task CreateDesign_should_reject_blank_name_when_request_is_invalid()
     {
         using IsolatedWebApplicationFactory factory = CreateFactory();
         using HttpClient client = factory.CreateClient();
@@ -220,7 +222,7 @@ public sealed class DesignEndpointsTests
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         JsonElement problem = document.RootElement;
-        AssertPropertyNames(problem, ProblemDetailsPropertyNames);
+        AssertPropertyNames(problem, TestContractConstants.ProblemDetailsPropertyNames);
         Assert.Equal(BadRequestType, problem.GetProperty("type").GetString());
         Assert.Equal(expectedTitle, problem.GetProperty("title").GetString());
         Assert.Equal(400, problem.GetProperty("status").GetInt32());
@@ -234,7 +236,7 @@ public sealed class DesignEndpointsTests
     private static void DeleteDatabaseFiles(string databasePath)
     {
         SqliteConnection.ClearAllPools();
-        foreach (string suffix in DatabaseFileSuffixes)
+        foreach (string suffix in TestContractConstants.DatabaseFileSuffixes)
         {
             File.Delete(databasePath + suffix);
         }

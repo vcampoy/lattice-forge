@@ -1,11 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
 
-namespace LatticeForge.Api.Tests.LatticeForge.Api.Endpoints;
+namespace LatticeForge.Api.Tests.LatticeForge.Api.Controllers;
 
-public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebApplicationFactory>
+public sealed class ManufacturingControllerTests : IClassFixture<IsolatedWebApplicationFactory>
 {
     private const string BadRequestType = "https://www.rfc-editor.org/rfc/rfc9110#name-400-bad-request";
     private static readonly string[] AnalysisPropertyNames =
@@ -31,17 +32,9 @@ public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebAppli
         "minimumWallThickness",
         "depositionRate"
     ];
-    private static readonly string[] ProblemDetailsPropertyNames =
-    [
-        "type",
-        "title",
-        "status",
-        "detail",
-        "traceId"
-    ];
     private readonly HttpClient _client;
 
-    public ManufacturingEndpointsTests(IsolatedWebApplicationFactory factory)
+    public ManufacturingControllerTests(IsolatedWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
@@ -63,7 +56,7 @@ public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebAppli
     }
 
     [Fact]
-    public async Task PostAnalysis_should_return_canonical_wire_contract_when_request_is_valid()
+    public async Task CreateManufacturingAnalysis_should_return_canonical_wire_contract_when_request_is_valid()
     {
         HttpResponseMessage response = await _client.PostAsJsonAsync("/api/analyses", new
         {
@@ -91,7 +84,7 @@ public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebAppli
     }
 
     [Fact]
-    public async Task PostAnalysis_should_return_problem_details_when_dimensions_are_invalid()
+    public async Task CreateManufacturingAnalysis_should_return_problem_details_when_dimensions_are_invalid()
     {
         HttpResponseMessage response = await _client.PostAsJsonAsync("/api/analyses", new
         {
@@ -104,6 +97,22 @@ public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebAppli
             response,
             "Manufacturing analysis request is invalid.",
             "Length must be greater than 0 and no more than 1000 mm. (Parameter 'Length')");
+    }
+
+    [Fact]
+    public async Task CreateManufacturingAnalysis_should_return_validation_problem_when_body_is_missing()
+    {
+        using StringContent content = new(string.Empty, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = await _client.PostAsync("/api/analyses", content);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        JsonElement problem = document.RootElement;
+        Assert.Equal("One or more validation errors occurred.", problem.GetProperty("title").GetString());
+        Assert.Equal(400, problem.GetProperty("status").GetInt32());
+        Assert.False(string.IsNullOrWhiteSpace(problem.GetProperty("traceId").GetString()));
     }
 
     private static void AssertMaterial(
@@ -135,7 +144,7 @@ public sealed class ManufacturingEndpointsTests : IClassFixture<IsolatedWebAppli
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         JsonElement problem = document.RootElement;
-        AssertPropertyNames(problem, ProblemDetailsPropertyNames);
+        AssertPropertyNames(problem, TestContractConstants.ProblemDetailsPropertyNames);
         Assert.Equal(BadRequestType, problem.GetProperty("type").GetString());
         Assert.Equal(expectedTitle, problem.GetProperty("title").GetString());
         Assert.Equal(400, problem.GetProperty("status").GetInt32());

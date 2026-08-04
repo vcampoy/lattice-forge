@@ -1,5 +1,12 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { createDesignExportJson, sanitizeFilename } from './designPersistence'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  createDesignExportJson,
+  getDesign,
+  getRecentDesigns,
+  sanitizeFilename,
+  saveDesign,
+  toDesignRequest,
+} from './designPersistence'
 import { createOptimizedExportScene } from './geometry/optimizedExport'
 import { useDesignStore } from './useDesignStore'
 
@@ -10,7 +17,19 @@ const design = {
   process: 'Sls' as const,
 }
 
+const savedDesign = {
+  id: 'saved-1',
+  name: 'Bracket baseline',
+  createdAt: '2026-08-03T00:00:00Z',
+  updatedAt: '2026-08-03T00:00:00Z',
+  parameters: { length: 120, height: 80, depth: 40, wallThickness: 4, holeRadius: 8, latticeDensity: 0.5 },
+  materialId: 'aluminum-sls',
+  process: 'Sls' as const,
+  schemaVersion: 1,
+}
+
 afterEach(() => {
+  vi.restoreAllMocks()
   useDesignStore.getState().resetDesign()
   useDesignStore.getState().setViewMode('orbit')
   useDesignStore.getState().setDesignViewMode('solid')
@@ -36,6 +55,69 @@ describe('design persistence and export helpers', () => {
       illustrativeDataDisclaimer: expect.stringContaining('illustrative'),
     })
     expect(payload.parameters).toEqual(design.parameters)
+  })
+
+  it('toDesignRequest_should_normalize_lattice_density_when_design_uses_percentage', () => {
+    const request = toDesignRequest(design)
+
+    expect(request).toMatchObject({
+      name: 'Bracket / baseline: v1',
+      materialId: 'aluminum-sls',
+      process: 'Sls',
+      schemaVersion: 1,
+      parameters: { latticeDensity: 0.5 },
+    })
+  })
+
+  it('saveDesign_should_post_controller_contract_when_request_is_valid', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(savedDesign), { status: 201 })))
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    const result = await saveDesign(design, controller.signal)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/designs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(toDesignRequest(design)),
+      signal: controller.signal,
+    })
+    expect(result).toEqual(savedDesign)
+  })
+
+  it('saveDesign_should_surface_title_when_api_controller_rejects_model_binding', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify({
+      title: 'One or more validation errors occurred.',
+      status: 400,
+    }), { status: 400 }))))
+
+    await expect(saveDesign(design)).rejects.toThrow('One or more validation errors occurred.')
+  })
+
+  it('getRecentDesigns_should_get_design_collection_when_requested', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify([savedDesign]), { status: 200 })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await getRecentDesigns()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/designs', { signal: undefined })
+    expect(result).toEqual([savedDesign])
+  })
+
+  it('getDesign_should_encode_identifier_and_get_design_when_requested', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(savedDesign), { status: 200 })))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await getDesign('design/with spaces')
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/designs/design%2Fwith%20spaces', { signal: undefined })
+    expect(result).toEqual(savedDesign)
+  })
+
+  it('getRecentDesigns_should_reject_non_array_payload_when_response_is_invalid', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify(savedDesign), { status: 200 }))))
+
+    await expect(getRecentDesigns()).rejects.toThrow('The designs response was invalid.')
   })
 
   it('createOptimizedExportScene_should_include_the_visible_bracket_and_lattice_geometry', () => {

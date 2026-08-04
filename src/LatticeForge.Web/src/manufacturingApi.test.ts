@@ -1,14 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
-import { useManufacturingAnalysis, type AnalysisQuery } from './useManufacturingAnalysis'
+import { createManufacturingAnalysis, ManufacturingApiError, type AnalysisRequest } from './manufacturingApi'
 
-const query: AnalysisQuery = {
+const REQUEST: AnalysisRequest = {
   parameters: { length: 120, height: 80, depth: 40, wallThickness: 4, holeRadius: 10, latticeDensity: 0.5 },
   materialId: 'aluminum-sls',
   process: 'Sls',
 }
 
-const analysis = {
+const ANALYSIS = {
   solidVolume: 100,
   optimizedVolume: 60,
   estimatedWeight: 160,
@@ -25,66 +24,73 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('useManufacturingAnalysis', () => {
-  it('debounces requests and exposes the successful response', async () => {
-    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(analysis), { status: 200 })))
+describe('createManufacturingAnalysis', () => {
+  it('createManufacturingAnalysis_should_post_controller_contract_when_request_is_valid', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(ANALYSIS), { status: 200 })))
     vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
 
-    const { result } = renderHook(() => useManufacturingAnalysis(query, { debounceMs: 20 }))
-    expect(fetchMock).not.toHaveBeenCalled()
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), { timeout: 500 })
-    await waitFor(() => expect(result.current.status).toBe('success'))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(result.current.data?.printabilityScore).toBe(88)
+    const result = await createManufacturingAnalysis(REQUEST, controller.signal)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/analyses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(REQUEST),
+      signal: controller.signal,
+    })
+    expect(result).toEqual(ANALYSIS)
   })
 
-  it('does not restart analysis when an equivalent query object is recreated by the caller', async () => {
-    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(analysis), { status: 200 })))
-    vi.stubGlobal('fetch', fetchMock)
+  it('createManufacturingAnalysis_should_surface_detail_when_controller_returns_problem_details', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify({
+      title: 'Manufacturing analysis request is invalid.',
+      detail: 'Wall thickness is invalid.',
+      status: 400,
+      traceId: 'trace-1',
+    }), { status: 400 }))))
 
-    const { result } = renderHook(() => useManufacturingAnalysis({
-      ...query,
-      parameters: { ...query.parameters },
-    }, { debounceMs: 0 }))
+    const error = await captureError(() => createManufacturingAnalysis(REQUEST, new AbortController().signal))
 
-    await waitFor(() => expect(result.current.status).toBe('success'))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(error).toBeInstanceOf(ManufacturingApiError)
+    expect(error).toMatchObject({ status: 400, message: 'Wall thickness is invalid.', detail: 'Wall thickness is invalid.' })
   })
 
-  it('aborts stale requests and keeps only the newest result', async () => {
-    let resolveFirst: ((response: Response) => void) | undefined
-    const firstResponse = new Promise<Response>((resolve) => { resolveFirst = resolve })
-    const fetchMock = vi.fn()
-      .mockReturnValueOnce(firstResponse)
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ...analysis, printabilityScore: 92 })))
-    vi.stubGlobal('fetch', fetchMock)
-    const { result, rerender } = renderHook(({ currentQuery }) => useManufacturingAnalysis(currentQuery, { debounceMs: 10 }), { initialProps: { currentQuery: query } })
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-    const firstSignal = fetchMock.mock.calls[0]?.[1]?.signal as AbortSignal
-    rerender({ currentQuery: { ...query, parameters: { ...query.parameters, latticeDensity: 0.75 } } })
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
-    expect(firstSignal.aborted).toBe(true)
-    resolveFirst?.(new Response(JSON.stringify(analysis)))
-    await waitFor(() => expect(result.current.data?.printabilityScore).toBe(92))
+  it('createManufacturingAnalysis_should_surface_title_when_api_controller_rejects_model_binding', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify({
+      title: 'One or more validation errors occurred.',
+      status: 400,
+      errors: { request: ['The request field is required.'] },
+    }), { status: 400 }))))
+
+    const error = await captureError(() => createManufacturingAnalysis(REQUEST, new AbortController().signal))
+
+    expect(error).toMatchObject({ status: 400, message: 'One or more validation errors occurred.', detail: undefined })
   })
 
-  it('maps validation responses to a recoverable validation state', async () => {
-    const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ detail: 'Wall thickness is invalid.' }), { status: 400 })))
-    vi.stubGlobal('fetch', fetchMock)
-    const { result } = renderHook(() => useManufacturingAnalysis(query, { debounceMs: 0 }))
-    await waitFor(() => expect(result.current.status).toBe('validation'))
-    expect(result.current.error).toContain('Wall thickness')
+  it('createManufacturingAnalysis_should_report_unavailable_when_fetch_fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('Network down'))))
+
+    const error = await captureError(() => createManufacturingAnalysis(REQUEST, new AbortController().signal))
+
+    expect(error).toMatchObject({ status: 0, message: 'The manufacturing API is unavailable.' })
   })
 
-  it('offers retry when the API is unavailable', async () => {
-    const fetchMock = vi.fn()
-      .mockRejectedValueOnce(new Error('Network down'))
-      .mockResolvedValueOnce(new Response(JSON.stringify(analysis)))
-    vi.stubGlobal('fetch', fetchMock)
-    const { result } = renderHook(() => useManufacturingAnalysis(query, { debounceMs: 0 }))
-    await waitFor(() => expect(result.current.status).toBe('unavailable'))
-    result.current.retry()
-    await waitFor(() => expect(result.current.status).toBe('success'))
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+  it('createManufacturingAnalysis_should_preserve_abort_when_request_is_cancelled', async () => {
+    const abortError = new DOMException('The operation was aborted.', 'AbortError')
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(abortError)))
+
+    const error = await captureError(() => createManufacturingAnalysis(REQUEST, new AbortController().signal))
+
+    expect(error).toBe(abortError)
   })
 })
+
+async function captureError(action: () => Promise<unknown>): Promise<Error> {
+  try {
+    await action()
+  } catch (error) {
+    return error as Error
+  }
+
+  throw new Error('Expected action to throw.')
+}

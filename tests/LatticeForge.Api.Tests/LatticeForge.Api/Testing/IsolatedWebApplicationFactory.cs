@@ -9,7 +9,6 @@ public sealed class IsolatedWebApplicationFactory : WebApplicationFactory<Progra
 {
     private const int DatabaseFileDeleteAttempts = 10;
     private const int DatabaseFileDeleteRetryDelayMilliseconds = 50;
-    private static readonly string[] DatabaseFileSuffixes = [string.Empty, "-wal", "-shm"];
     private readonly string _databasePath;
     private readonly bool _ownsDatabasePath;
 
@@ -54,7 +53,7 @@ public sealed class IsolatedWebApplicationFactory : WebApplicationFactory<Progra
         for (int attempt = 1; attempt <= DatabaseFileDeleteAttempts; attempt++)
         {
             IOException? lastException = null;
-            foreach (string suffix in DatabaseFileSuffixes)
+            foreach (string suffix in TestContractConstants.DatabaseFileSuffixes)
             {
                 try
                 {

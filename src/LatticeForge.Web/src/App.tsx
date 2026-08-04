@@ -16,6 +16,7 @@ import {
 import { DesignControls } from './DesignControls'
 import { DesignPersistenceControls } from './DesignPersistenceControls'
 import { ManufacturingAnalysisPanel } from './ManufacturingAnalysisPanel'
+import { apiRoutes } from './apiClient'
 import { ThreeViewport } from './geometry/ThreeViewport'
 import { useDesignStore, type MaterialOption } from './useDesignStore'
 import { useManufacturingAnalysis } from './useManufacturingAnalysis'
@@ -90,7 +91,7 @@ function App() {
 
     const loadHealth = async (): Promise<void> => {
       try {
-        const response = await fetch('/api/health', { signal: controller.signal })
+        const response = await fetch(apiRoutes.health, { signal: controller.signal })
         if (!response.ok) {
           throw new Error(`Health request failed with ${response.status}`)
         }
@@ -105,7 +106,7 @@ function App() {
 
     const loadMaterials = async (): Promise<void> => {
       try {
-        const response = await fetch('/api/materials', { signal: controller.signal })
+        const response = await fetch(apiRoutes.materials, { signal: controller.signal })
         if (!response.ok) {
           setMaterialsState('offline')
           return

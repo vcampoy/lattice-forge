@@ -6,8 +6,6 @@ namespace LatticeForge.Api.Tests.LatticeForge.Api.Testing;
 
 public sealed class IsolatedWebApplicationFactoryTests
 {
-    private static readonly string[] DatabaseFileSuffixes = [string.Empty, "-wal", "-shm"];
-
     [Fact]
     public void Dispose_should_delete_database_files_when_path_is_factory_owned()
     {
@@ -63,7 +61,7 @@ public sealed class IsolatedWebApplicationFactoryTests
 
     private static void AssertDatabaseFilesExist(string databasePath)
     {
-        foreach (string suffix in DatabaseFileSuffixes)
+        foreach (string suffix in TestContractConstants.DatabaseFileSuffixes)
         {
             Assert.True(File.Exists(databasePath + suffix));
         }
@@ -71,7 +69,7 @@ public sealed class IsolatedWebApplicationFactoryTests
 
     private static void AssertDatabaseFilesDoNotExist(string databasePath)
     {
-        foreach (string suffix in DatabaseFileSuffixes)
+        foreach (string suffix in TestContractConstants.DatabaseFileSuffixes)
         {
             Assert.False(File.Exists(databasePath + suffix));
         }
@@ -85,7 +83,7 @@ public sealed class IsolatedWebApplicationFactoryTests
         }
 
         SqliteConnection.ClearAllPools();
-        foreach (string suffix in DatabaseFileSuffixes)
+        foreach (string suffix in TestContractConstants.DatabaseFileSuffixes)
         {
             File.Delete(databasePath + suffix);
         }

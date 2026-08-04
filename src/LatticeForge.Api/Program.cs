@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using LatticeForge.Api.Endpoints;
 using LatticeForge.Infrastructure.Persistence;
 using LatticeForge.UseCase.Designs;
 using LatticeForge.UseCase.Manufacturing;
@@ -10,16 +9,15 @@ builder.Services.AddScoped<IDesignUseCase, DesignUseCase>();
 string designConnection = builder.Configuration.GetConnectionString("Designs")
     ?? $"Data Source={Path.Combine(AppContext.BaseDirectory, "latticeforge.db")}";
 builder.Services.AddLatticeForgeInfrastructure(designConnection);
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
-builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 WebApplication app = builder.Build();
 app.Services.InitializeLatticeForgeDatabase();
 
-app.MapHealthEndpoints();
-app.MapManufacturingEndpoints();
-app.MapDesignEndpoints();
+app.MapControllers();
 
 app.Run();
 

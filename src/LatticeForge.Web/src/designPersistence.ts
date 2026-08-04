@@ -1,4 +1,5 @@
 import type { BracketGeometryParameters } from './geometry/geometryParameters'
+import { apiRoutes, readApiProblem } from './apiClient'
 import type { DesignParameters, ManufacturingProcess } from './useDesignStore'
 
 export const DESIGN_SCHEMA_VERSION = 1
@@ -65,17 +66,12 @@ export function toDesignRequest(design: DesignDraft): Omit<PersistedDesign, 'id'
 }
 
 async function readApiError(response: Response): Promise<string> {
-  try {
-    const payload: unknown = await response.json()
-    if (payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string') return payload.detail
-  } catch {
-    // Use the status fallback below when the response is not Problem Details JSON.
-  }
-  return `Design request failed with status ${response.status}.`
+  const problem = await readApiProblem(response, `Design request failed with status ${response.status}.`)
+  return problem.message
 }
 
 export async function saveDesign(design: DesignDraft, signal?: AbortSignal): Promise<PersistedDesign> {
-  const response = await fetch('/api/designs', {
+  const response = await fetch(apiRoutes.designs, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(toDesignRequest(design)),
@@ -86,7 +82,7 @@ export async function saveDesign(design: DesignDraft, signal?: AbortSignal): Pro
 }
 
 export async function getRecentDesigns(signal?: AbortSignal): Promise<readonly PersistedDesign[]> {
-  const response = await fetch('/api/designs', { signal })
+  const response = await fetch(apiRoutes.designs, { signal })
   if (!response.ok) throw new Error(await readApiError(response))
   const payload: unknown = await response.json()
   if (!Array.isArray(payload)) throw new Error('The designs response was invalid.')
@@ -94,7 +90,7 @@ export async function getRecentDesigns(signal?: AbortSignal): Promise<readonly P
 }
 
 export async function getDesign(id: string, signal?: AbortSignal): Promise<PersistedDesign> {
-  const response = await fetch(`/api/designs/${encodeURIComponent(id)}`, { signal })
+  const response = await fetch(apiRoutes.design(id), { signal })
   if (!response.ok) throw new Error(await readApiError(response))
   return await response.json() as PersistedDesign
 }

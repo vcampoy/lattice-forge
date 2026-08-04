@@ -2,13 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
 
-namespace LatticeForge.Api.Tests.LatticeForge.Api.Endpoints;
+namespace LatticeForge.Api.Tests.LatticeForge.Api.Controllers;
 
-public sealed class HealthEndpointsTests : IClassFixture<IsolatedWebApplicationFactory>
+public sealed class HealthControllerTests : IClassFixture<IsolatedWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public HealthEndpointsTests(IsolatedWebApplicationFactory factory)
+    public HealthControllerTests(IsolatedWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }

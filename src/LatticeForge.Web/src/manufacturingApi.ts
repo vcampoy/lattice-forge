@@ -1,4 +1,5 @@
 import type { BracketGeometryParameters } from './geometry/geometryParameters'
+import { apiRoutes, readApiProblem } from './apiClient'
 import type { ManufacturingProcess } from './useDesignStore'
 
 export type AnalysisRequest = {
@@ -35,7 +36,7 @@ export class ManufacturingApiError extends Error {
 export async function createManufacturingAnalysis(request: AnalysisRequest, signal: AbortSignal): Promise<ManufacturingAnalysis> {
   let response: Response
   try {
-    response = await fetch('/api/analyses', {
+    response = await fetch(apiRoutes.analyses, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -47,14 +48,8 @@ export async function createManufacturingAnalysis(request: AnalysisRequest, sign
   }
 
   if (!response.ok) {
-    let detail: string | undefined
-    try {
-      const payload: unknown = await response.json()
-      if (payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string') detail = payload.detail
-    } catch {
-      detail = undefined
-    }
-    throw new ManufacturingApiError(response.status, detail ?? `Analysis request failed with status ${response.status}.`, detail)
+    const problem = await readApiProblem(response, `Analysis request failed with status ${response.status}.`)
+    throw new ManufacturingApiError(response.status, problem.message, problem.detail)
   }
 
   return await response.json() as ManufacturingAnalysis
