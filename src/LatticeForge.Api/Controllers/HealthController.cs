@@ -1,5 +1,5 @@
-using LatticeForge.UseCase.Health.GetHealthUseCase;
-using LatticeForge.UseCase.Health.GetHealthUseCase.Dtos;
+using LatticeForge.UseCase.Health.GetHealth;
+using LatticeForge.UseCase.Health.GetHealth.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LatticeForge.Api.Controllers;

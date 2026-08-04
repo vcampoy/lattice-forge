@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
-using LatticeForge.UseCase.Health.GetHealthUseCase.Dtos;
+using LatticeForge.UseCase.Health.GetHealth.Dtos;
 
 namespace LatticeForge.Api.Tests.LatticeForge.Api.Controllers;
 

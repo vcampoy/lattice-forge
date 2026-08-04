@@ -1,5 +1,5 @@
-using LatticeForge.Domain.Designs;
-using LatticeForge.Domain.Manufacturing;
+using LatticeForge.Domain.Dtos.Designs;
+using LatticeForge.Domain.Dtos.Manufacturing;
 using LatticeForge.UseCase.Manufacturing.Helpers;
 
 namespace LatticeForge.UseCase.Designs.Helpers;

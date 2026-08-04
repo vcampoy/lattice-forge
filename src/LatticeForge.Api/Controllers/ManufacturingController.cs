@@ -1,8 +1,8 @@
-using LatticeForge.Domain.Manufacturing;
-using LatticeForge.UseCase.Manufacturing.AnalyzeMaterialsUseCase;
-using LatticeForge.UseCase.Manufacturing.AnalyzeMaterialsUseCase.Dtos;
-using LatticeForge.UseCase.Manufacturing.GetMaterialsUseCase;
-using LatticeForge.UseCase.Manufacturing.GetMaterialsUseCase.Dtos;
+using LatticeForge.Domain.Dtos.Manufacturing;
+using LatticeForge.UseCase.Manufacturing.AnalyzeMaterials;
+using LatticeForge.UseCase.Manufacturing.AnalyzeMaterials.Dtos;
+using LatticeForge.UseCase.Manufacturing.GetMaterials;
+using LatticeForge.UseCase.Manufacturing.GetMaterials.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LatticeForge.Api.Controllers;

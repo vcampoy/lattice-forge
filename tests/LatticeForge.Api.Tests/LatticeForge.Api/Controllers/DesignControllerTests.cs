@@ -3,9 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using LatticeForge.Domain.Entities;
 using LatticeForge.Api.Tests.LatticeForge.Api.Testing;
-using LatticeForge.Domain.Manufacturing;
+using LatticeForge.Domain.Dtos.Manufacturing;
 using LatticeForge.Infrastructure.Persistence;
-using LatticeForge.UseCase.Designs.CreateDesignUseCase.Dtos;
+using LatticeForge.UseCase.Designs.CreateDesign.Dtos;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 

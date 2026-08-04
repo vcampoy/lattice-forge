@@ -1,4 +1,4 @@
-using LatticeForge.Domain.Manufacturing;
+using LatticeForge.Domain.Dtos.Manufacturing;
 
 namespace LatticeForge.UseCase.Manufacturing.Helpers;
 

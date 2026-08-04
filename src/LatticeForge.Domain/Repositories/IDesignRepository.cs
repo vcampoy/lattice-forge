@@ -1,4 +1,4 @@
-using LatticeForge.Domain.Designs;
+using LatticeForge.Domain.Dtos.Designs;
 
 namespace LatticeForge.Domain.Repositories;
 

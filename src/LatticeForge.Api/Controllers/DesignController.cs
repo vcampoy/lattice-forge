@@ -1,9 +1,9 @@
-using LatticeForge.UseCase.Designs.CreateDesignUseCase;
-using LatticeForge.UseCase.Designs.CreateDesignUseCase.Dtos;
-using LatticeForge.UseCase.Designs.GetDesignUseCase;
-using LatticeForge.UseCase.Designs.GetDesignUseCase.Dtos;
-using LatticeForge.UseCase.Designs.GetDesignsUseCase;
-using LatticeForge.UseCase.Designs.GetDesignsUseCase.Dtos;
+using LatticeForge.UseCase.Designs.CreateDesign;
+using LatticeForge.UseCase.Designs.CreateDesign.Dtos;
+using LatticeForge.UseCase.Designs.GetDesign;
+using LatticeForge.UseCase.Designs.GetDesign.Dtos;
+using LatticeForge.UseCase.Designs.GetDesigns;
+using LatticeForge.UseCase.Designs.GetDesigns.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LatticeForge.Api.Controllers;
